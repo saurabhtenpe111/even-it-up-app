@@ -1,13 +1,16 @@
 
-import { ExpenseProvider } from '@/context/ExpenseContext';
-import Dashboard from '@/components/Dashboard';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  return (
-    <ExpenseProvider>
-      <Dashboard />
-    </ExpenseProvider>
-  );
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Redirect to dashboard
+    navigate('/');
+  }, [navigate]);
+
+  return null;
 };
 
 export default Index;

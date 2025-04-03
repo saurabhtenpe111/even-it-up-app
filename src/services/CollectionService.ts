@@ -77,8 +77,8 @@ export async function fetchCollections(): Promise<Collection[]> {
         fields: fieldCounts[collectionItem.id] || 0,
         items: contentCounts[collectionItem.id] || 0,
         lastUpdated: new Date(collectionItem.updated_at).toLocaleDateString(),
-        settings: collectionItem.settings || {},      // Add default empty object if not present
-        permissions: collectionItem.permissions || {} // Add default empty object if not present
+        settings: {},      // Add default empty object since it's not in the database
+        permissions: {}    // Add default empty object since it's not in the database
       };
     });
   } catch (error) {
@@ -134,8 +134,8 @@ export async function createCollection(params: CreateCollectionParams): Promise<
       fields: 0,
       items: 0,
       lastUpdated: new Date(newCollection.updated_at).toLocaleDateString(),
-      settings: newCollection.settings || {},
-      permissions: newCollection.permissions || []
+      settings: {},      // Add default empty object since it's not in the database
+      permissions: []    // Add default empty array since it's not in the database
     };
   } catch (error: any) {
     console.error('Error creating collection:', error);

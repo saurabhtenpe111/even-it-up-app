@@ -16,28 +16,38 @@ import Users from "./pages/Users";
 import FieldConfiguration from "./pages/FieldConfiguration";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Create the client outside of the render function
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/collections/:collectionId/fields" element={<FieldConfiguration />} />
-          <Route path="/components" element={<Components />} />
-          <Route path="/content" element={<Content />} />
-          <Route path="/api" element={<Api />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/collections/:collectionId/fields" element={<FieldConfiguration />} />
+            <Route path="/components" element={<Components />} />
+            <Route path="/content" element={<Content />} />
+            <Route path="/api" element={<Api />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

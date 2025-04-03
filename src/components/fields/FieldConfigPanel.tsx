@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,8 +19,6 @@ import * as z from 'zod';
 import { FieldValidationPanel } from './FieldValidationPanel';
 import { FieldAppearancePanel } from './FieldAppearancePanel';
 import { FieldAdvancedPanel } from './FieldAdvancedPanel';
-import { InputTextField } from './inputs/InputTextField';
-import { NumberInputField } from './inputs/NumberInputField';
 
 // Define a dynamic schema based on field type
 const getFieldSchema = (fieldType: string | null) => {
@@ -74,18 +72,6 @@ export function FieldConfigPanel({
   onUpdateAdvanced 
 }: FieldConfigPanelProps) {
   const [activeTab, setActiveTab] = useState('general');
-  const [validationSettings, setValidationSettings] = useState({});
-  const [appearanceSettings, setAppearanceSettings] = useState({});
-  const [advancedSettings, setAdvancedSettings] = useState({});
-  
-  useEffect(() => {
-    // Initialize settings from fieldData if available
-    if (fieldData) {
-      setValidationSettings(fieldData.validation || {});
-      setAppearanceSettings(fieldData.appearance || {});
-      setAdvancedSettings(fieldData.advanced || {});
-    }
-  }, [fieldData]);
   
   const fieldSchema = getFieldSchema(fieldType);
   
@@ -96,7 +82,7 @@ export function FieldConfigPanel({
       description: '',
       helpText: '',
       required: false,
-      defaultValue: fieldType === 'number' ? 0 : '',
+      defaultValue: undefined,
       ui_options: {
         placeholder: '',
         help_text: '',
@@ -109,72 +95,20 @@ export function FieldConfigPanel({
   });
 
   const handleSubmit = (values: any) => {
-    // Combine all settings
-    const combinedData = {
-      ...values,
-      validation: validationSettings,
-      appearance: appearanceSettings,
-      advanced: advancedSettings,
+    // Prepare advanced settings
+    const advancedSettings = {
+      keyFilter: values.keyFilter,
+      min: values.min,
+      max: values.max,
     };
     
-    onSave(combinedData);
+    onUpdateAdvanced(advancedSettings);
+    onSave(values);
   };
 
-  const handleUpdateValidation = (data: any) => {
-    setValidationSettings(data);
-  };
-
-  const handleUpdateAppearance = (data: any) => {
-    setAppearanceSettings(data);
-  };
-
-  const handleUpdateAdvanced = (data: any) => {
-    setAdvancedSettings(data);
-    onUpdateAdvanced(data); // Pass to parent component
-  };
-  
-  // Render field preview based on field type
-  const renderFieldPreview = () => {
-    switch (fieldType) {
-      case 'text':
-        return (
-          <div className="mt-4 p-4 border rounded-md">
-            <h3 className="text-sm font-medium mb-2">Field Preview:</h3>
-            <InputTextField
-              id="preview-field"
-              label={form.watch('name') || "Field Label"}
-              placeholder={form.watch('ui_options.placeholder') || "Enter text..."}
-              helpText={form.watch('helpText')}
-              keyFilter={form.watch('keyFilter') || "none"}
-              floatLabel={appearanceSettings.floatLabel}
-              filled={appearanceSettings.filled}
-            />
-          </div>
-        );
-      case 'number':
-        return (
-          <div className="mt-4 p-4 border rounded-md">
-            <h3 className="text-sm font-medium mb-2">Field Preview:</h3>
-            <NumberInputField
-              id="preview-number"
-              value={0}
-              onChange={() => {}}
-              label={form.watch('name') || "Number Field"}
-              min={form.watch('min')}
-              max={form.watch('max')}
-              placeholder={form.watch('ui_options.placeholder') || "Enter a number"}
-              floatLabel={appearanceSettings.floatLabel}
-              filled={appearanceSettings.filled}
-              showButtons={advancedSettings.showButtons}
-              buttonLayout={advancedSettings.buttonLayout || "horizontal"}
-              prefix={advancedSettings.prefix}
-              suffix={advancedSettings.suffix}
-            />
-          </div>
-        );
-      default:
-        return null;
-    }
+  const handleUpdateAdvanced = (advancedData: any) => {
+    // Forward advanced settings to parent component
+    onUpdateAdvanced(advancedData);
   };
 
   return (
@@ -253,26 +187,15 @@ export function FieldConfigPanel({
                   </FormItem>
                 )}
               />
-              
-              {renderFieldPreview()}
             </div>
           </TabsContent>
           
           <TabsContent value="validation">
-            <FieldValidationPanel 
-              fieldType={fieldType}
-              initialData={fieldData?.validation}
-              onUpdate={handleUpdateValidation}
-            />
+            <FieldValidationPanel />
           </TabsContent>
           
           <TabsContent value="appearance">
-            <FieldAppearancePanel 
-              form={form} 
-              fieldType={fieldType}
-              initialData={fieldData?.appearance}
-              onUpdate={handleUpdateAppearance}
-            />
+            <FieldAppearancePanel form={form} fieldType={fieldType} />
           </TabsContent>
           
           <TabsContent value="advanced">

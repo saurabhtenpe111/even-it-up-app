@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Json } from '@/integrations/supabase/types';
@@ -332,22 +333,3 @@ export async function createField(collectionId: string, fieldData: any): Promise
     throw error;
   }
 }
-
-export const deleteField = async (collectionId: string, fieldId: string): Promise<void> => {
-  // This would normally make an API call to delete the field
-  // For now, we'll simulate a delay and return success
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  console.log(`Deleting field ${fieldId} from collection ${collectionId}`);
-  
-  // In a real application, this would call your backend API
-  // For example:
-  // return fetch(`/api/collections/${collectionId}/fields/${fieldId}`, {
-  //   method: 'DELETE',
-  // }).then(response => {
-  //   if (!response.ok) throw new Error('Failed to delete field');
-  //   return response.json();
-  // });
-  
-  return Promise.resolve();
-};

@@ -11,13 +11,7 @@ interface FieldAdvancedTabProps {
 export function FieldAdvancedTab({ fieldType, fieldData, onUpdate }: FieldAdvancedTabProps) {
   // Handle saving advanced settings
   const handleSaveAdvancedSettings = (advancedSettings: any) => {
-    // Merge with existing field data if needed
-    const updatedData = {
-      ...(fieldData || {}),
-      advanced: advancedSettings
-    };
-    
-    onUpdate(updatedData);
+    onUpdate(advancedSettings);
   };
 
   return (

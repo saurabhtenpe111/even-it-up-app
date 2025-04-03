@@ -200,7 +200,7 @@ export function FieldConfigPanel({
       floatLabel: fieldData?.advanced?.floatLabel || false,
       filled: fieldData?.advanced?.filled || false,
       showButtons: fieldData?.advanced?.showButtons || false,
-      buttonLayout: fieldData?.advanced?.buttonLayout || "horizontal" as "horizontal" | "vertical",
+      buttonLayout: fieldData?.advanced?.buttonLayout || "horizontal",
       prefix: fieldData?.advanced?.prefix || '',
       suffix: fieldData?.advanced?.suffix || '',
     };

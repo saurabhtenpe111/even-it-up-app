@@ -171,7 +171,7 @@ export function FieldConfigPanel({
               floatLabel={appearanceSettings?.floatLabel}
               filled={appearanceSettings?.filled}
               showButtons={advancedSettings?.showButtons}
-              buttonLayout={advancedSettings?.buttonLayout || "horizontal"}
+              buttonLayout={(advancedSettings?.buttonLayout || "horizontal") as "horizontal" | "vertical"}
               prefix={advancedSettings?.prefix}
               suffix={advancedSettings?.suffix}
             />

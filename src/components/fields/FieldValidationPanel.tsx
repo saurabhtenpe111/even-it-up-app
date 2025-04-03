@@ -1,10 +1,9 @@
+
 import React, { useState } from "react";
 import { 
-  Input
-} from "@/components/ui/input";
-import { 
+  Input, 
   Textarea 
-} from "@/components/ui/textarea";
+} from "@/components/ui/input";
 import { 
   FormItem, 
   FormLabel, 

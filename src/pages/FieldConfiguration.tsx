@@ -341,7 +341,11 @@ export default function FieldConfiguration() {
         return (
           <Card>
             <CardContent className="pt-6">
-              <FieldValidationPanel />
+              <FieldValidationPanel 
+                fieldType={fieldType}
+                initialData={{}}
+                onUpdate={() => {}}
+              />
             </CardContent>
           </Card>
         );

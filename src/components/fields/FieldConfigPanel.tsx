@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -22,7 +21,6 @@ import { FieldAdvancedPanel } from './FieldAdvancedPanel';
 import { InputTextField } from './inputs/InputTextField';
 import { NumberInputField } from './inputs/NumberInputField';
 
-// Define a dynamic schema based on field type
 const getFieldSchema = (fieldType: string | null) => {
   const baseSchema = {
     name: z.string().min(2, { message: "Field name must be at least 2 characters" }),
@@ -75,11 +73,20 @@ export function FieldConfigPanel({
 }: FieldConfigPanelProps) {
   const [activeTab, setActiveTab] = useState('general');
   const [validationSettings, setValidationSettings] = useState({});
-  const [appearanceSettings, setAppearanceSettings] = useState({});
-  const [advancedSettings, setAdvancedSettings] = useState({});
+  const [appearanceSettings, setAppearanceSettings] = useState<{
+    floatLabel?: boolean;
+    filled?: boolean;
+    [key: string]: any;
+  }>({});
+  const [advancedSettings, setAdvancedSettings] = useState<{
+    showButtons?: boolean;
+    buttonLayout?: string;
+    prefix?: string;
+    suffix?: string;
+    [key: string]: any;
+  }>({});
   
   useEffect(() => {
-    // Initialize settings from fieldData if available
     if (fieldData) {
       setValidationSettings(fieldData.validation || {});
       setAppearanceSettings(fieldData.appearance || {});
@@ -109,7 +116,6 @@ export function FieldConfigPanel({
   });
 
   const handleSubmit = (values: any) => {
-    // Combine all settings
     const combinedData = {
       ...values,
       validation: validationSettings,
@@ -130,10 +136,9 @@ export function FieldConfigPanel({
 
   const handleUpdateAdvanced = (data: any) => {
     setAdvancedSettings(data);
-    onUpdateAdvanced(data); // Pass to parent component
+    onUpdateAdvanced(data);
   };
-  
-  // Render field preview based on field type
+
   const renderFieldPreview = () => {
     switch (fieldType) {
       case 'text':
@@ -146,8 +151,8 @@ export function FieldConfigPanel({
               placeholder={form.watch('ui_options.placeholder') || "Enter text..."}
               helpText={form.watch('helpText')}
               keyFilter={form.watch('keyFilter') || "none"}
-              floatLabel={appearanceSettings.floatLabel}
-              filled={appearanceSettings.filled}
+              floatLabel={appearanceSettings?.floatLabel}
+              filled={appearanceSettings?.filled}
             />
           </div>
         );
@@ -163,12 +168,12 @@ export function FieldConfigPanel({
               min={form.watch('min')}
               max={form.watch('max')}
               placeholder={form.watch('ui_options.placeholder') || "Enter a number"}
-              floatLabel={appearanceSettings.floatLabel}
-              filled={appearanceSettings.filled}
-              showButtons={advancedSettings.showButtons}
-              buttonLayout={advancedSettings.buttonLayout || "horizontal"}
-              prefix={advancedSettings.prefix}
-              suffix={advancedSettings.suffix}
+              floatLabel={appearanceSettings?.floatLabel}
+              filled={appearanceSettings?.filled}
+              showButtons={advancedSettings?.showButtons}
+              buttonLayout={advancedSettings?.buttonLayout || "horizontal"}
+              prefix={advancedSettings?.prefix}
+              suffix={advancedSettings?.suffix}
             />
           </div>
         );
@@ -268,10 +273,10 @@ export function FieldConfigPanel({
           
           <TabsContent value="appearance">
             <FieldAppearancePanel 
-              form={form} 
               fieldType={fieldType}
               initialData={fieldData?.appearance}
               onUpdate={handleUpdateAppearance}
+              form={form}
             />
           </TabsContent>
           

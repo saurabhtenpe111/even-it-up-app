@@ -69,21 +69,24 @@ export async function fetchCollections(): Promise<Collection[]> {
     }
 
     // Map the data to our Collection interface
-    return (collectionsData || []).map((collection) => ({
-      id: collection.id,
-      title: collection.title,
-      apiId: collection.api_id,
-      description: collection.description || '',
-      icon: collection.icon || 'C',
-      iconColor: collection.icon_color || 'blue',
-      status: collection.status as 'published' | 'draft',
-      fields: fieldCounts[collection.id] || 0,
-      items: contentCounts[collection.id] || 0,
-      lastUpdated: new Date(collection.updated_at).toLocaleDateString(),
-      // Handle settings and permissions that might not exist in the database
-      settings: collection.settings || {},
-      permissions: collection.permissions || []
-    }));
+    return (collectionsData || []).map((collection) => {
+      const collection = {
+        id: collection.id,
+        title: collection.title,
+        apiId: collection.api_id,
+        description: collection.description || '',
+        icon: collection.icon || 'C',
+        iconColor: collection.icon_color || 'blue',
+        status: collection.status as 'published' | 'draft',
+        fields: fieldCounts[collection.id] || 0,
+        items: contentCounts[collection.id] || 0,
+        lastUpdated: new Date(collection.updated_at).toLocaleDateString(),
+        settings: collection.settings || {},      // Add default empty object if not present
+        permissions: collection.permissions || {} // Add default empty object if not present
+      };
+
+      return collection;
+    });
   } catch (error) {
     console.error('Error fetching collections:', error);
     throw error;

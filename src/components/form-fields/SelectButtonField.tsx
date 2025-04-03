@@ -1,34 +1,24 @@
 
-import React from "react";
-import { cn } from "@/lib/utils";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Label } from "@/components/ui/label";
-
-export interface SelectButtonOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
+import React from 'react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SelectButtonFieldProps {
-  id?: string;
-  name?: string;
   label?: string;
-  options: SelectButtonOption[];
+  options: Array<{ label: string; value: string }>;
   value: string | string[];
   onChange: (value: string | string[]) => void;
   multiple?: boolean;
   required?: boolean;
   disabled?: boolean;
   helpText?: string;
-  invalid?: boolean;
-  errorMessage?: string;
   className?: string;
+  error?: string;
 }
 
-export function SelectButtonField({
-  id,
-  name,
+export const SelectButtonField = ({
   label,
   options,
   value,
@@ -37,75 +27,117 @@ export function SelectButtonField({
   required = false,
   disabled = false,
   helpText,
-  invalid = false,
-  errorMessage,
   className,
-}: SelectButtonFieldProps) {
-  const handleValueChange = (newValue: string | string[]) => {
+  error
+}: SelectButtonFieldProps) => {
+  // Handle single selection
+  const handleSingleValueChange = (newValue: string) => {
     onChange(newValue);
   };
 
-  // If multiple is true, ensure value is always an array
-  let currentValue: string | string[] = value;
-  if (multiple && !Array.isArray(value)) {
-    currentValue = value ? [value] : [];
-  }
-  // If multiple is false, ensure value is always a string
-  else if (!multiple && Array.isArray(value)) {
-    currentValue = value.length > 0 ? value[0] : '';
-  }
+  // Handle multiple selection
+  const handleMultipleValueChange = (newValue: string[]) => {
+    onChange(newValue);
+  };
 
-  const helpTextId = `${id}-help`;
-  const errorId = `${id}-error`;
+  // For single selection, convert string to array when using ToggleGroup
+  const convertSingleValueToArray = (val: string | string[]): string[] => {
+    if (Array.isArray(val)) return val;
+    return val ? [val] : [];
+  };
+
+  // For multiple selection, convert array to string when using ToggleGroup
+  const convertArrayToSingleValue = (val: string[]): string => {
+    return val && val.length > 0 ? val[0] : '';
+  };
+
+  // Remove an item from multiple selection
+  const removeItem = (itemToRemove: string) => {
+    if (Array.isArray(value)) {
+      const newValue = value.filter(item => item !== itemToRemove);
+      onChange(newValue);
+    }
+  };
 
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2", className)}>
       {label && (
-        <Label
-          htmlFor={id}
-          className={cn(
-            "block",
-            invalid ? "text-red-500" : "",
-            disabled ? "text-gray-400 cursor-not-allowed" : "",
-            required ? "after:content-['*'] after:text-red-500 after:ml-0.5" : ""
-          )}
+        <div className="flex items-center">
+          <label className="text-sm font-medium">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+        </div>
+      )}
+      
+      {multiple ? (
+        <ToggleGroup
+          type="multiple"
+          value={Array.isArray(value) ? value : []}
+          onValueChange={handleMultipleValueChange}
+          className="flex flex-wrap gap-2"
+          disabled={disabled}
         >
-          {label}
-        </Label>
+          {options.map((option) => (
+            <ToggleGroupItem
+              key={option.value}
+              value={option.value}
+              className="data-[state=on]:bg-blue-600 data-[state=on]:text-white"
+            >
+              {option.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      ) : (
+        <ToggleGroup
+          type="single"
+          value={typeof value === 'string' ? value : ''}
+          onValueChange={handleSingleValueChange}
+          className="flex flex-wrap gap-2"
+          disabled={disabled}
+        >
+          {options.map((option) => (
+            <ToggleGroupItem
+              key={option.value}
+              value={option.value}
+              className="data-[state=on]:bg-blue-600 data-[state=on]:text-white"
+            >
+              {option.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       )}
-
-      <ToggleGroup 
-        type={multiple ? "multiple" : "single"}
-        value={multiple ? currentValue as string[] : currentValue as string}
-        onValueChange={handleValueChange}
-        className={cn("flex flex-wrap gap-2", className)}
-        disabled={disabled}
-      >
-        {options.map((option) => (
-          <ToggleGroupItem
-            key={option.value}
-            value={option.value}
-            disabled={option.disabled || disabled}
-            className="data-[state=on]:bg-blue-600 data-[state=on]:text-white"
-          >
-            {option.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-
-      {helpText && !invalid && (
-        <p id={helpTextId} className="text-xs text-gray-500 mt-1">
-          {helpText}
-        </p>
+      
+      {/* Display selected items as pills for multiple selection */}
+      {multiple && Array.isArray(value) && value.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {value.map((val) => {
+            const option = options.find(opt => opt.value === val);
+            return (
+              <div 
+                key={val} 
+                className="flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm"
+              >
+                {option?.label || val}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 ml-1 -mr-1 hover:bg-blue-200 rounded-full"
+                  onClick={() => removeItem(val)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
       )}
-
-      {invalid && errorMessage && (
-        <p id={errorId} className="text-xs text-red-500 mt-1">
-          {errorMessage}
-        </p>
-      )}
+      
+      {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   );
-}
+};
 
 export default SelectButtonField;

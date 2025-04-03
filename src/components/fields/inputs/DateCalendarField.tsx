@@ -15,7 +15,18 @@ export function DateCalendarField({
   onChange,
   required = false,
   helpText,
-  disabled = false
+  disabled = false,
+  dateFormat = 'PP',
+  allowMultipleSelection = false,
+  allowRangeSelection = false,
+  monthPickerOnly = false,
+  yearPickerOnly = false,
+  showButtonBar = false,
+  includeTimePicker = false,
+  showMultipleMonths = false,
+  floatingLabel = false,
+  invalid = false,
+  inlineMode = false
 }: DateCalendarFieldProps) {
   const [date, setDate] = useState<Date | null>(value || null);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -41,10 +52,27 @@ export function DateCalendarField({
     setCalendarOpen(false);
   };
 
+  // If inline mode is enabled, render just the calendar
+  if (inlineMode) {
+    return (
+      <Calendar
+        mode="single"
+        selected={date || undefined}
+        onSelect={handleSelect}
+        initialFocus
+        className="border rounded-md p-3 pointer-events-auto"
+      />
+    );
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-sm font-medium">
+        <label htmlFor={id} className={cn(
+          "block text-sm font-medium",
+          invalid && "text-red-500",
+          floatingLabel && "absolute -top-2 left-2 bg-white px-1 text-xs z-10 transition-all"
+        )}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -58,11 +86,13 @@ export function DateCalendarField({
             disabled={disabled}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !date && "text-muted-foreground",
+              invalid && "border-red-500",
+              floatingLabel && "pt-4"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date && isValid(date) ? format(date, 'PP') : <span>Pick a date</span>}
+            {date && isValid(date) ? format(date, dateFormat) : <span>Pick a date</span>}
             {date && (
               <Button
                 variant="ghost"

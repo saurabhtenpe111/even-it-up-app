@@ -1,284 +1,173 @@
 
-import React, { useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { NumberInputField } from "./inputs/NumberInputField";
-import { DateCalendarField } from "./inputs/DateCalendarField";
+import React, { useState } from 'react';
+import DateCalendarField from './inputs/DateCalendarField';
 
 export function FieldLayoutPanel() {
-  const [numberValue, setNumberValue] = useState<number | null>(1000);
-  const [dateValue, setDateValue] = useState<Date | null>(new Date());
-  const [activeTab, setActiveTab] = useState("number");
-
+  const [date, setDate] = useState<Date>(new Date());
+  
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Form Layout</h2>
-      <p className="text-gray-500">See previews of available field types and their configurations</p>
+      <h2 className="text-xl font-semibold mb-4">Field Layout Examples</h2>
+      <p className="text-gray-500 mb-8">View and test different field layout configurations</p>
       
-      <Alert variant="info" className="bg-blue-50 border-blue-100">
-        <Info className="h-5 w-5 text-blue-500" />
-        <AlertDescription className="text-blue-700">
-          This panel allows you to preview different field types and their configurations.
-          Select a field type from the tabs below to explore available options.
-        </AlertDescription>
-      </Alert>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="number">Number</TabsTrigger>
-          <TabsTrigger value="date">Date/Calendar</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="number" className="space-y-6">
-          <h3 className="text-lg font-medium">Number Field Examples</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Basic Number</h4>
-                <NumberInputField 
-                  value={numberValue} 
-                  onChange={setNumberValue}
-                  label="Basic Number"
-                />
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Locale & Currency</h4>
-                <NumberInputField 
-                  value={numberValue} 
-                  onChange={setNumberValue}
-                  label="USD Currency"
-                  locale="en-US"
-                  currency="USD"
-                />
-                <div className="mt-4">
-                  <NumberInputField 
-                    value={numberValue} 
-                    onChange={setNumberValue}
-                    label="EUR Currency"
-                    locale="de-DE"
-                    currency="EUR"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Prefix & Suffix</h4>
-                <NumberInputField 
-                  value={numberValue} 
-                  onChange={setNumberValue}
-                  label="With Prefix"
-                  prefix="$"
-                />
-                <div className="mt-4">
-                  <NumberInputField 
-                    value={numberValue} 
-                    onChange={setNumberValue}
-                    label="With Suffix"
-                    suffix=" units"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Buttons</h4>
-                <NumberInputField 
-                  value={numberValue} 
-                  onChange={setNumberValue}
-                  label="Horizontal Buttons"
-                  showButtons
-                  buttonLayout="horizontal"
-                />
-                <div className="mt-4">
-                  <NumberInputField 
-                    value={numberValue} 
-                    onChange={setNumberValue}
-                    label="Vertical Buttons"
-                    showButtons
-                    buttonLayout="vertical"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Styling Options</h4>
-                <NumberInputField 
-                  value={numberValue} 
-                  onChange={setNumberValue}
-                  label="Float Label"
-                  floatLabel
-                />
-                <div className="mt-4">
-                  <NumberInputField 
-                    value={numberValue} 
-                    onChange={setNumberValue}
-                    label="Filled Style"
-                    filled
-                  />
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">States</h4>
-                <NumberInputField 
-                  value={numberValue} 
-                  onChange={setNumberValue}
-                  label="Invalid"
-                  invalid
-                />
-                <div className="mt-4">
-                  <NumberInputField 
-                    value={numberValue} 
-                    onChange={setNumberValue}
-                    label="Disabled"
-                    disabled
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="date" className="space-y-6">
-          <h3 className="text-lg font-medium">Date/Calendar Field Examples</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Basic Calendar</h4>
-                <DateCalendarField 
-                  value={dateValue} 
-                  onChange={setDateValue}
-                  label="Basic Date Picker"
-                />
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Date Formats</h4>
-                <DateCalendarField 
-                  value={dateValue} 
-                  onChange={setDateValue}
-                  label="MM/dd/yyyy"
-                  dateFormat="MM/dd/yyyy"
-                />
-                <div className="mt-4">
-                  <DateCalendarField 
-                    value={dateValue} 
-                    onChange={setDateValue}
-                    label="dd-MMM-yyyy"
-                    dateFormat="dd-MMM-yyyy"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Selection Types</h4>
-                <DateCalendarField 
-                  value={dateValue} 
-                  onChange={setDateValue}
-                  label="Multiple Selection"
-                  allowMultipleSelection
-                />
-                <div className="mt-4">
-                  <DateCalendarField 
-                    value={dateValue} 
-                    onChange={setDateValue}
-                    label="Range Selection"
-                    allowRangeSelection
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Special Pickers</h4>
-                <DateCalendarField 
-                  value={dateValue} 
-                  onChange={setDateValue}
-                  label="Month Picker"
-                  monthPickerOnly
-                />
-                <div className="mt-4">
-                  <DateCalendarField 
-                    value={dateValue} 
-                    onChange={setDateValue}
-                    label="Year Picker"
-                    yearPickerOnly
-                  />
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">Advanced Features</h4>
-                <DateCalendarField 
-                  value={dateValue} 
-                  onChange={setDateValue}
-                  label="With Button Bar"
-                  showButtonBar
-                />
-                <div className="mt-4">
-                  <DateCalendarField 
-                    value={dateValue} 
-                    onChange={setDateValue}
-                    label="With Time Picker"
-                    includeTimePicker
-                  />
-                </div>
-                <div className="mt-4">
-                  <DateCalendarField 
-                    value={dateValue} 
-                    onChange={setDateValue}
-                    label="Multiple Months"
-                    showMultipleMonths
-                  />
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-3">States & Styles</h4>
-                <DateCalendarField 
-                  value={dateValue} 
-                  onChange={setDateValue}
-                  label="Float Label"
-                  floatingLabel
-                />
-                <div className="mt-4">
-                  <DateCalendarField 
-                    value={dateValue} 
-                    onChange={setDateValue}
-                    label="Invalid"
-                    invalid
-                  />
-                </div>
-                <div className="mt-4">
-                  <DateCalendarField 
-                    value={dateValue} 
-                    onChange={setDateValue}
-                    label="Disabled"
-                    disabled
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-4 border rounded-md mt-4">
-            <h4 className="text-sm font-medium mb-3">Inline Mode</h4>
-            <Label className="text-sm font-medium mb-2 block">Inline Calendar</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-8">
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">1. Basic Date Field</h3>
             <DateCalendarField 
-              value={dateValue} 
-              onChange={setDateValue}
-              inlineMode
+              id="basic-date"
+              value={date} 
+              onChange={setDate}
+              label="Select a date"
             />
           </div>
-        </TabsContent>
-      </Tabs>
+          
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">2. Date Format</h3>
+            <DateCalendarField 
+              id="date-format-1"
+              value={date} 
+              onChange={setDate}
+              label="Short Date Format"
+              dateFormat="P"
+            />
+            <div className="mt-4">
+              <DateCalendarField 
+                id="date-format-2"
+                value={date} 
+                onChange={setDate}
+                label="Long Date Format"
+                dateFormat="PPP"
+              />
+            </div>
+          </div>
+          
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">3. Selection Types</h3>
+            <DateCalendarField 
+              id="selection-type-1"
+              value={date} 
+              onChange={setDate}
+              label="Multiple Selection"
+              allowMultipleSelection={true}
+            />
+            <div className="mt-4">
+              <DateCalendarField 
+                id="selection-type-2"
+                value={date} 
+                onChange={setDate}
+                label="Range Selection"
+                allowRangeSelection={true}
+              />
+            </div>
+          </div>
+          
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">4. View Types</h3>
+            <DateCalendarField 
+              id="view-type-1"
+              value={date} 
+              onChange={setDate}
+              label="Month Picker Only"
+              monthPickerOnly={true}
+            />
+            <div className="mt-4">
+              <DateCalendarField 
+                id="view-type-2"
+                value={date} 
+                onChange={setDate}
+                label="Year Picker Only"
+                yearPickerOnly={true}
+              />
+            </div>
+          </div>
+          
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">5. Additional Features</h3>
+            <DateCalendarField 
+              id="features-1"
+              value={date} 
+              onChange={setDate}
+              label="With Button Bar"
+              showButtonBar={true}
+            />
+            <div className="mt-4">
+              <DateCalendarField 
+                id="features-2"
+                value={date} 
+                onChange={setDate}
+                label="With Time Picker"
+                includeTimePicker={true}
+              />
+            </div>
+            <div className="mt-4">
+              <DateCalendarField 
+                id="features-3"
+                value={date} 
+                onChange={setDate}
+                label="Multiple Months View"
+                showMultipleMonths={true}
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-8">
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">6. Input Styles</h3>
+            <DateCalendarField 
+              id="style-1"
+              value={date} 
+              onChange={setDate}
+              label="Floating Label"
+              floatingLabel={true}
+            />
+            <div className="mt-4">
+              <DateCalendarField 
+                id="style-2"
+                value={date} 
+                onChange={setDate}
+                label="Invalid State"
+                invalid={true}
+              />
+            </div>
+            <div className="mt-4">
+              <DateCalendarField 
+                id="style-3"
+                value={date} 
+                onChange={setDate}
+                label="Disabled State"
+                disabled={true}
+              />
+            </div>
+          </div>
+          
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">7. Inline Calendar</h3>
+            <DateCalendarField 
+              id="inline-calendar"
+              value={date} 
+              onChange={setDate}
+              label="Embedded Calendar"
+              inlineMode={true}
+            />
+          </div>
+          
+          <div className="p-4 border rounded-md">
+            <h3 className="text-sm font-medium mb-3">8. Help Text & Required</h3>
+            <DateCalendarField 
+              id="help-required"
+              value={date} 
+              onChange={setDate}
+              label="Birthday"
+              required={true}
+              helpText="Please select your date of birth from the calendar"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+export default FieldLayoutPanel;

@@ -182,6 +182,52 @@ export function FieldConfigPanel({
     }
   };
 
+  const getDefaultNumberFieldSettings = () => {
+    return {
+      floatLabel: fieldData?.advanced?.floatLabel || false,
+      filled: fieldData?.advanced?.filled || false,
+      showButtons: fieldData?.advanced?.showButtons || false,
+      buttonLayout: fieldData?.advanced?.buttonLayout || "horizontal",
+      prefix: fieldData?.advanced?.prefix || '',
+      suffix: fieldData?.advanced?.suffix || '',
+    };
+  };
+
+  const renderAdvancedTab = () => {
+    if (activeTab !== 'advanced') return null;
+
+    const advancedConfig = {
+      floatLabel: fieldData?.advanced?.floatLabel || false,
+      filled: fieldData?.advanced?.filled || false,
+      showButtons: fieldData?.advanced?.showButtons || false,
+      buttonLayout: fieldData?.advanced?.buttonLayout || "horizontal",
+      prefix: fieldData?.advanced?.prefix || '',
+      suffix: fieldData?.advanced?.suffix || '',
+    };
+
+    return (
+      <TabsContent value="advanced">
+        <FieldAdvancedPanel 
+          fieldType={fieldType}
+          initialData={fieldData?.advanced}
+          onSave={handleUpdateAdvanced}
+        />
+      </TabsContent>
+    );
+  };
+
+  const renderAppearanceTab = () => {
+    if (activeTab !== 'appearance') return null;
+    return (
+      <FieldAppearancePanel
+        fieldType={fieldType}
+        initialData={fieldData?.appearance || {}}
+        onUpdate={handleUpdateAppearance}
+        form={form}
+      />
+    );
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -272,21 +318,10 @@ export function FieldConfigPanel({
           </TabsContent>
           
           <TabsContent value="appearance">
-            <FieldAppearancePanel 
-              fieldType={fieldType}
-              initialData={fieldData?.appearance}
-              onUpdate={handleUpdateAppearance}
-              form={form}
-            />
+            {renderAppearanceTab()}
           </TabsContent>
           
-          <TabsContent value="advanced">
-            <FieldAdvancedPanel 
-              fieldType={fieldType}
-              initialData={fieldData?.advanced}
-              onSave={handleUpdateAdvanced}
-            />
-          </TabsContent>
+          {renderAdvancedTab()}
         </Tabs>
         
         <div className="flex justify-end space-x-4 mt-6">

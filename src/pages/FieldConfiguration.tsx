@@ -206,8 +206,9 @@ export default function FieldConfiguration() {
 
   const handlePreview = () => {
     setPreviewMode(true);
+    
     const previewUrl = `/collections/${collectionId}/preview`;
-    window.open(previewUrl, '_blank');
+    window.open(previewUrl, '_blank', 'noopener,noreferrer');
     
     toast({
       title: "Preview mode",

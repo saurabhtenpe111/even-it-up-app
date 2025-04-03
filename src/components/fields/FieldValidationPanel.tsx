@@ -5,12 +5,12 @@ import {
   Textarea 
 } from "@/components/ui/input";
 import { 
-  Switch, 
   FormItem, 
   FormLabel, 
   FormControl,
   FormDescription
 } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 import { 
   Select, 
   SelectContent, 

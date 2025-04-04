@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FieldAdvancedPanelProps {
   fieldType: string | null;
@@ -256,10 +257,12 @@ export function FieldAdvancedPanel({ fieldType, initialData = {}, onSave }: Fiel
                 />
                 
                 {jsonError && (
-                  <div className="flex items-center text-red-600 text-sm mt-1">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {jsonError}
-                  </div>
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {jsonError}
+                    </AlertDescription>
+                  </Alert>
                 )}
                 
                 <p className="text-xs text-gray-500">

@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { CollectionPreviewForm } from '@/components/collection-preview/CollectionPreviewForm';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import JSONEditorField from '@/components/fields/inputs/JSONEditorField';
+import { FieldAppearancePanel } from '@/components/fields/appearance/FieldAppearancePanel';
 
 const fieldTypes = {
   'Text & Numbers': [
@@ -111,6 +112,7 @@ export default function FieldConfiguration() {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('fields');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [appearanceSettings, setAppearanceSettings] = useState<any>({});
   const [advancedSettings, setAdvancedSettings] = useState<any>({});
   const [validationSettings, setValidationSettings] = useState<ValidationSettings>({});
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -245,15 +247,23 @@ export default function FieldConfiguration() {
           fieldData: {
             ...fieldData,
             type: fields.find(f => f.id === selectedFieldId)?.type,
+            appearance: appearanceSettings,
+            validation: validationSettings,
+            advanced: advancedSettings
           }
         });
       } else {
         await createFieldMutation.mutateAsync({
           ...fieldData,
           type: selectedFieldType,
+          appearance: appearanceSettings,
+          validation: validationSettings,
           advanced: advancedSettings
         });
       }
+      
+      setSelectedFieldId(null);
+      setSelectedFieldType(null);
     } catch (error) {
       console.error('Error saving field:', error);
     } finally {
@@ -261,8 +271,40 @@ export default function FieldConfiguration() {
     }
   };
 
+  const handleUpdateAppearanceSettings = (settings: any) => {
+    console.log('Updating appearance settings:', settings);
+    setAppearanceSettings(settings);
+    
+    if (selectedFieldId) {
+      const selectedField = fields.find(f => f.id === selectedFieldId);
+      if (selectedField) {
+        updateFieldMutation.mutate({
+          fieldId: selectedFieldId,
+          fieldData: {
+            ...selectedField,
+            appearance: settings
+          }
+        });
+      }
+    }
+  };
+
   const handleUpdateAdvancedSettings = (settings: any) => {
+    console.log('Updating advanced settings:', settings);
     setAdvancedSettings(settings);
+    
+    if (selectedFieldId) {
+      const selectedField = fields.find(f => f.id === selectedFieldId);
+      if (selectedField) {
+        updateFieldMutation.mutate({
+          fieldId: selectedFieldId,
+          fieldData: {
+            ...selectedField,
+            advanced: settings
+          }
+        });
+      }
+    }
   };
   
   const handleUpdateValidationSettings = (settings: ValidationSettings) => {
@@ -460,14 +502,74 @@ export default function FieldConfiguration() {
         return (
           <Card>
             <CardContent className="pt-6">
-              <FieldValidationPanel 
-                fieldType={selectedFieldId ? fields.find(f => f.id === selectedFieldId)?.type || null : null} 
-                initialData={selectedFieldId && fields.find(f => f.id === selectedFieldId)?.validation ? 
-                  fields.find(f => f.id === selectedFieldId)?.validation : 
-                  {}
-                }
-                onUpdate={handleUpdateValidationSettings}
-              />
+              {selectedFieldId ? (
+                <FieldValidationPanel 
+                  fieldType={fields.find(f => f.id === selectedFieldId)?.type || null} 
+                  initialData={fields.find(f => f.id === selectedFieldId)?.validation || {}}
+                  onUpdate={handleUpdateValidationSettings}
+                />
+              ) : (
+                <div className="text-center py-10">
+                  <h3 className="text-xl font-semibold mb-2">No Field Selected</h3>
+                  <p className="text-gray-500 mb-6">Please select a field from the list to configure its validation rules</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab('fields')}
+                  >
+                    Back to Fields
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      case 'appearance':
+        return (
+          <Card>
+            <CardContent className="pt-6">
+              {selectedFieldId ? (
+                <FieldAppearancePanel 
+                  fieldType={fields.find(f => f.id === selectedFieldId)?.type || null} 
+                  initialData={fields.find(f => f.id === selectedFieldId)?.appearance || {}}
+                  onSave={handleUpdateAppearanceSettings}
+                />
+              ) : (
+                <div className="text-center py-10">
+                  <h3 className="text-xl font-semibold mb-2">No Field Selected</h3>
+                  <p className="text-gray-500 mb-6">Please select a field from the list to configure its appearance</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab('fields')}
+                  >
+                    Back to Fields
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      case 'advanced':
+        return (
+          <Card>
+            <CardContent className="pt-6">
+              {selectedFieldId ? (
+                <FieldAdvancedPanel 
+                  fieldType={fields.find(f => f.id === selectedFieldId)?.type || null} 
+                  initialData={fields.find(f => f.id === selectedFieldId)?.advanced || {}}
+                  onSave={handleUpdateAdvancedSettings}
+                />
+              ) : (
+                <div className="text-center py-10">
+                  <h3 className="text-xl font-semibold mb-2">No Field Selected</h3>
+                  <p className="text-gray-500 mb-6">Please select a field from the list to configure its advanced settings</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab('fields')}
+                  >
+                    Back to Fields
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -511,7 +613,22 @@ export default function FieldConfiguration() {
             </Button>
             <Button 
               className="bg-blue-600 hover:bg-blue-700"
-              onClick={handleSaveAllChanges}
+              onClick={() => {
+                if (selectedFieldId) {
+                  const selectedField = fields.find(f => f.id === selectedFieldId);
+                  if (selectedField) {
+                    updateFieldMutation.mutate({
+                      fieldId: selectedFieldId,
+                      fieldData: {
+                        ...selectedField,
+                        appearance: appearanceSettings,
+                        validation: validationSettings,
+                        advanced: advancedSettings
+                      }
+                    });
+                  }
+                }
+              }}
             >
               <Save className="mr-2 h-4 w-4" />
               Save Changes
@@ -520,10 +637,11 @@ export default function FieldConfiguration() {
         </div>
         
         <Tabs defaultValue="fields" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full max-w-md grid grid-cols-3 mb-8">
+          <TabsList className="w-full max-w-md grid grid-cols-4 mb-8">
             <TabsTrigger value="fields">Fields</TabsTrigger>
             <TabsTrigger value="validation">Validation</TabsTrigger>
-            <TabsTrigger value="layout">Layout</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
           
           <TabsContent value={activeTab}>

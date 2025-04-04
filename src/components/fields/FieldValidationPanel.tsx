@@ -1,388 +1,229 @@
 
-import React, { useState } from "react";
-import { 
-  Input, 
-  Textarea 
-} from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { 
   FormItem, 
   FormLabel, 
   FormControl,
   FormDescription
 } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { InputTextField } from "@/components/fields/inputs/InputTextField";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Info, Check, X, AlertTriangle } from "lucide-react";
 
-interface RuleProps {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-  enabled?: boolean;
-  onToggle?: (value: boolean) => void;
+export interface FieldValidationPanelProps {
+  fieldType: string | null;
+  initialData?: any;
+  onUpdate: (data: any) => void;
 }
 
-const ValidationRule = ({ title, description, children, enabled = false, onToggle }: RuleProps) => (
-  <div className="space-y-2 border rounded-md p-4">
-    <div className="flex items-center justify-between">
-      <div>
-        <h3 className="text-base font-medium">{title}</h3>
-        <p className="text-sm text-gray-500">{description}</p>
-      </div>
-      {onToggle && (
-        <Switch 
-          checked={enabled} 
-          onCheckedChange={onToggle} 
-          aria-label={`Enable ${title}`}
-        />
-      )}
-    </div>
-    {enabled && <div className="pt-2">{children}</div>}
-  </div>
-);
-
-export function FieldValidationPanel() {
-  const [activeTab, setActiveTab] = useState("rules");
-  const [validationRules, setValidationRules] = useState({
-    required: false,
-    minLength: false,
-    maxLength: false,
-    pattern: false,
-    customValidation: false
-  });
+export function FieldValidationPanel({ fieldType, initialData = {}, onUpdate }: FieldValidationPanelProps) {
+  const [activeTab, setActiveTab] = useState('rules');
+  const [required, setRequired] = useState(initialData.required || false);
+  const [minLengthEnabled, setMinLengthEnabled] = useState(initialData.minLengthEnabled || false);
+  const [maxLengthEnabled, setMaxLengthEnabled] = useState(initialData.maxLengthEnabled || false);
+  const [patternEnabled, setPatternEnabled] = useState(initialData.patternEnabled || false);
+  const [customValidationEnabled, setCustomValidationEnabled] = useState(initialData.customValidationEnabled || false);
+  const [minLength, setMinLength] = useState(initialData.minLength || 0);
+  const [maxLength, setMaxLength] = useState(initialData.maxLength || 100);
+  const [pattern, setPattern] = useState(initialData.pattern || '');
+  const [customMessage, setCustomMessage] = useState(initialData.customMessage || '');
+  const [customValidation, setCustomValidation] = useState(initialData.customValidation || '');
   
-  // Test values for the demo field
-  const [testValue, setTestValue] = useState("");
-  const [testError, setTestError] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState("This field is required");
-  const [minLength, setMinLength] = useState(5);
-  const [maxLength, setMaxLength] = useState(50);
-  const [pattern, setPattern] = useState("");
-  const [patternDesc, setPatternDesc] = useState("");
-  const [customFunc, setCustomFunc] = useState("");
+  useEffect(() => {
+    handleUpdateValidation();
+  }, [
+    required, minLengthEnabled, maxLengthEnabled, patternEnabled, 
+    customValidationEnabled, minLength, maxLength, pattern, customMessage, customValidation
+  ]);
   
-  const handleToggleRule = (rule: keyof typeof validationRules) => {
-    setValidationRules({
-      ...validationRules,
-      [rule]: !validationRules[rule]
-    });
-  };
-  
-  const validateTestValue = () => {
-    // Reset error
-    setTestError(null);
+  const handleUpdateValidation = () => {
+    const validationData = {
+      required,
+      minLengthEnabled,
+      maxLengthEnabled,
+      patternEnabled,
+      customValidationEnabled,
+      minLength: parseInt(minLength as any),
+      maxLength: parseInt(maxLength as any),
+      pattern,
+      customMessage,
+      customValidation
+    };
     
-    // Required validation
-    if (validationRules.required && !testValue.trim()) {
-      setTestError(errorMessage || "This field is required");
-      return;
-    }
-    
-    // Min length validation
-    if (validationRules.minLength && testValue.length < minLength) {
-      setTestError(`Must be at least ${minLength} characters`);
-      return;
-    }
-    
-    // Max length validation
-    if (validationRules.maxLength && testValue.length > maxLength) {
-      setTestError(`Cannot exceed ${maxLength} characters`);
-      return;
-    }
-    
-    // Pattern validation
-    if (validationRules.pattern && pattern) {
-      try {
-        const regex = new RegExp(pattern);
-        if (!regex.test(testValue)) {
-          setTestError(patternDesc || "Pattern doesn't match");
-          return;
-        }
-      } catch (e) {
-        setTestError("Invalid regex pattern");
-        return;
-      }
-    }
-    
-    // Custom validation (simplified demo)
-    if (validationRules.customValidation && customFunc) {
-      try {
-        // Safely evaluate simple validation expressions (for demo only)
-        const result = testValue.length > 0 && testValue[0].toUpperCase() === testValue[0];
-        if (!result) {
-          setTestError("Custom validation failed: First letter should be uppercase");
-          return;
-        }
-      } catch (e) {
-        setTestError("Error in custom validation function");
-        return;
-      }
-    }
+    onUpdate(validationData);
   };
   
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Field Validation Rules</h2>
-      <p className="text-gray-500">Configure validation rules for your field</p>
+      <h2 className="text-xl font-medium">Field Validation Rules</h2>
+      <p className="text-gray-500">
+        Configure validation rules for your field
+      </p>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="rules">Validation Rules</TabsTrigger>
-          <TabsTrigger value="live">Live Testing</TabsTrigger>
-          <TabsTrigger value="a11y">Accessibility</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6 bg-gray-100">
+          <TabsTrigger value="rules" className="data-[state=active]:bg-white">Validation Rules</TabsTrigger>
+          <TabsTrigger value="testing" className="data-[state=active]:bg-white">Live Testing</TabsTrigger>
+          <TabsTrigger value="accessibility" className="data-[state=active]:bg-white">Accessibility</TabsTrigger>
         </TabsList>
         
         <TabsContent value="rules" className="space-y-4">
-          <ValidationRule 
-            title="Required Field" 
-            description="Make this field mandatory for content creation"
-            enabled={validationRules.required}
-            onToggle={() => handleToggleRule('required')}
-          >
-            <Input 
-              placeholder="Custom error message" 
-              value={errorMessage}
-              onChange={(e) => setErrorMessage(e.target.value)}
-            />
-          </ValidationRule>
-          
-          <ValidationRule 
-            title="Minimum Length" 
-            description="Set a minimum number of characters"
-            enabled={validationRules.minLength}
-            onToggle={() => handleToggleRule('minLength')}
-          >
-            <div className="flex items-center gap-2">
-              <Input 
-                type="number" 
-                className="w-24" 
-                min={1}
-                value={minLength}
-                onChange={(e) => setMinLength(parseInt(e.target.value) || 1)}
-              />
-              <span className="text-sm text-gray-500">characters minimum</span>
-            </div>
-          </ValidationRule>
-          
-          <ValidationRule 
-            title="Maximum Length" 
-            description="Set a maximum number of characters"
-            enabled={validationRules.maxLength}
-            onToggle={() => handleToggleRule('maxLength')}
-          >
-            <div className="flex items-center gap-2">
-              <Input 
-                type="number" 
-                className="w-24" 
-                min={1}
-                value={maxLength}
-                onChange={(e) => setMaxLength(parseInt(e.target.value) || 1)}
-              />
-              <span className="text-sm text-gray-500">characters maximum</span>
-            </div>
-          </ValidationRule>
-          
-          <ValidationRule 
-            title="Pattern Matching" 
-            description="Validate using a regular expression"
-            enabled={validationRules.pattern}
-            onToggle={() => handleToggleRule('pattern')}
-          >
-            <div className="space-y-2">
-              <Input 
-                placeholder="Regular expression pattern (e.g., ^[A-Za-z]+$)" 
-                value={pattern}
-                onChange={(e) => setPattern(e.target.value)}
-              />
-              <Input 
-                placeholder="Pattern description (e.g., Only letters allowed)" 
-                value={patternDesc}
-                onChange={(e) => setPatternDesc(e.target.value)}
-              />
-            </div>
-          </ValidationRule>
-          
-          <ValidationRule 
-            title="Custom Validation" 
-            description="Create a custom validation rule"
-            enabled={validationRules.customValidation}
-            onToggle={() => handleToggleRule('customValidation')}
-          >
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500">For this demo, we'll check if the first character is uppercase</p>
-              <Alert className="bg-amber-50 border-amber-200">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-amber-800 text-xs">
-                  Custom validation functions are limited in this demo. In a real implementation, 
-                  you would be able to write custom logic.
-                </AlertDescription>
-              </Alert>
-            </div>
-          </ValidationRule>
-        </TabsContent>
-        
-        <TabsContent value="live" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Live Validation Testing</CardTitle>
-              <CardDescription>Test your validation rules in real-time</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="font-medium mb-2">Active Rules:</h3>
-                  <ul className="space-y-1 text-sm">
-                    {validationRules.required && (
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-green-500 mr-1" />
-                        Required field
-                      </li>
-                    )}
-                    {validationRules.minLength && (
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-green-500 mr-1" />
-                        Minimum length: {minLength} characters
-                      </li>
-                    )}
-                    {validationRules.maxLength && (
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-green-500 mr-1" />
-                        Maximum length: {maxLength} characters
-                      </li>
-                    )}
-                    {validationRules.pattern && (
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-green-500 mr-1" />
-                        Pattern matching: {pattern}
-                      </li>
-                    )}
-                    {validationRules.customValidation && (
-                      <li className="flex items-center">
-                        <Check className="h-4 w-4 text-green-500 mr-1" />
-                        Custom validation: First letter uppercase
-                      </li>
-                    )}
-                    {!Object.values(validationRules).some(Boolean) && (
-                      <li className="text-gray-500">No validation rules enabled</li>
-                    )}
-                  </ul>
+          <Card className="border rounded-md">
+            <CardContent className="p-0">
+              <div className="flex flex-row items-center justify-between space-x-2 p-4 border-b">
+                <div>
+                  <h3 className="text-base font-medium">Required Field</h3>
+                  <p className="text-sm text-gray-500">
+                    Make this field mandatory for content creation
+                  </p>
                 </div>
-              
-                <div className="space-y-2">
-                  <InputTextField
-                    id="test-field"
-                    label="Test Field"
-                    placeholder="Type to test validation rules"
-                    value={testValue}
-                    onChange={(e) => setTestValue(e.target.value)}
-                    invalid={!!testError}
-                    errorMessage={testError || ""}
-                    aria-invalid={!!testError}
-                    aria-describedby={testError ? "test-error" : undefined}
-                    required={validationRules.required}
-                  />
+                <Switch
+                  checked={required}
+                  onCheckedChange={setRequired}
+                />
+              </div>
+
+              {fieldType === 'text' && (
+                <>
+                  <div className="flex flex-row items-center justify-between space-x-2 p-4 border-b">
+                    <div>
+                      <h3 className="text-base font-medium">Minimum Length</h3>
+                      <p className="text-sm text-gray-500">
+                        Set a minimum number of characters
+                      </p>
+                    </div>
+                    <Switch
+                      checked={minLengthEnabled}
+                      onCheckedChange={setMinLengthEnabled}
+                    />
+                  </div>
                   
-                  <div className="flex justify-end">
-                    <Button 
-                      onClick={validateTestValue}
-                      disabled={!Object.values(validationRules).some(Boolean)}
-                    >
-                      Validate
-                    </Button>
+                  {minLengthEnabled && (
+                    <div className="px-4 py-3 border-b">
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        value={minLength}
+                        onChange={(e) => setMinLength(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex flex-row items-center justify-between space-x-2 p-4 border-b">
+                    <div>
+                      <h3 className="text-base font-medium">Maximum Length</h3>
+                      <p className="text-sm text-gray-500">
+                        Set a maximum number of characters
+                      </p>
+                    </div>
+                    <Switch
+                      checked={maxLengthEnabled}
+                      onCheckedChange={setMaxLengthEnabled}
+                    />
                   </div>
+
+                  {maxLengthEnabled && (
+                    <div className="px-4 py-3 border-b">
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        value={maxLength}
+                        onChange={(e) => setMaxLength(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex flex-row items-center justify-between space-x-2 p-4 border-b">
+                    <div>
+                      <h3 className="text-base font-medium">Pattern Matching</h3>
+                      <p className="text-sm text-gray-500">
+                        Validate using a regular expression
+                      </p>
+                    </div>
+                    <Switch
+                      checked={patternEnabled}
+                      onCheckedChange={setPatternEnabled}
+                    />
+                  </div>
+
+                  {patternEnabled && (
+                    <div className="px-4 py-3 border-b">
+                      <Input 
+                        value={pattern}
+                        onChange={(e) => setPattern(e.target.value)}
+                        placeholder="e.g. ^[a-zA-Z0-9]+$"
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="flex flex-row items-center justify-between space-x-2 p-4">
+                <div>
+                  <h3 className="text-base font-medium">Custom Validation</h3>
+                  <p className="text-sm text-gray-500">
+                    Create a custom validation rule
+                  </p>
                 </div>
-                
-                {testError === null && testValue && (
-                  <div className="flex items-center p-2 bg-green-50 text-green-800 rounded border border-green-200">
-                    <Check className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Validation passed!</span>
-                  </div>
-                )}
+                <Switch
+                  checked={customValidationEnabled}
+                  onCheckedChange={setCustomValidationEnabled}
+                />
               </div>
+
+              {customValidationEnabled && (
+                <div className="px-4 py-3">
+                  <Textarea 
+                    value={customValidation}
+                    onChange={(e) => setCustomValidation(e.target.value)}
+                    placeholder="Enter custom validation logic"
+                    className="w-full h-24"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Use JavaScript to define a validation function
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
+          
+          {(minLengthEnabled || maxLengthEnabled || patternEnabled || customValidationEnabled) && (
+            <FormItem>
+              <FormLabel>Custom Error Message</FormLabel>
+              <FormControl>
+                <Textarea 
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  placeholder="Enter a custom error message to display when validation fails"
+                  className="resize-y"
+                />
+              </FormControl>
+            </FormItem>
+          )}
         </TabsContent>
         
-        <TabsContent value="a11y" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Accessibility Settings</CardTitle>
-              <CardDescription>Configure accessibility options for validation errors</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>High Contrast Error States</FormLabel>
-                    <FormDescription>
-                      Use higher contrast colors for error states
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch defaultChecked />
-                  </FormControl>
-                </div>
-                
-                <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Screen Reader Announcements</FormLabel>
-                    <FormDescription>
-                      Automatically announce validation errors to screen readers
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch defaultChecked />
-                  </FormControl>
-                </div>
-                
-                <div className="space-y-2">
-                  <FormLabel>Error Announcement Delay (ms)</FormLabel>
-                  <Select defaultValue="500">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select delay" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">Immediate</SelectItem>
-                      <SelectItem value="500">500ms (Default)</SelectItem>
-                      <SelectItem value="1000">1000ms</SelectItem>
-                      <SelectItem value="2000">2000ms</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Time to wait before announcing validation errors
-                  </FormDescription>
-                </div>
-                
-                <Alert className="bg-blue-50 border-blue-100">
-                  <Info className="h-4 w-4 text-blue-500" />
-                  <AlertDescription className="text-blue-700 text-sm">
-                    All validation errors include proper ARIA attributes for screen readers: 
-                    <code className="bg-blue-100 px-1 mx-1 rounded text-xs">aria-invalid</code> and
-                    <code className="bg-blue-100 px-1 mx-1 rounded text-xs">aria-describedby</code>
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="testing">
+          <div className="p-6 bg-gray-50 rounded-md text-center">
+            <p className="text-gray-500">Test your validation rules on sample data</p>
+            {/* Live testing UI would go here */}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="accessibility">
+          <div className="p-6 bg-gray-50 rounded-md text-center">
+            <p className="text-gray-500">Configure accessibility settings for this field</p>
+            {/* Accessibility UI would go here */}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+export default FieldValidationPanel;

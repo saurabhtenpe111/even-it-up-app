@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -31,23 +32,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-export type Component = {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  fields: ComponentField[];
-  lastUpdated: string;
-}
-
-export type ComponentField = {
-  id: string;
-  name: string;
-  type: string;
-  required: boolean;
-  config?: Record<string, any>;
-}
+import { 
+  Component, 
+  ComponentField, 
+  fetchComponents, 
+  createComponent, 
+  updateComponent,
+  deleteComponent
+} from "@/services/ComponentService";
 
 type ComponentType = {
   id: string;
@@ -124,11 +116,9 @@ const componentTypes: Record<string, ComponentType[]> = {
   ]
 };
 
-const categories = Object.keys(componentTypes);
-
 export function ComponentsPanel() {
   const navigate = useNavigate();
-  const [components, setComponents] = useState<Component[]>([]);
+  const queryClient = useQueryClient();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -136,18 +126,60 @@ export function ComponentsPanel() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [componentToDelete, setComponentToDelete] = useState<string | null>(null);
   
-  useEffect(() => {
-    const savedComponents = localStorage.getItem('components');
-    if (savedComponents) {
-      try {
-        setComponents(JSON.parse(savedComponents));
-      } catch (e) {
-        console.error("Error loading components from localStorage:", e);
-        localStorage.removeItem('components'); // Clear invalid data
-      }
-    }
-  }, []);
+  const { 
+    data: components = [], 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: ['components'],
+    queryFn: fetchComponents
+  });
   
+  const createComponentMutation = useMutation({
+    mutationFn: (componentData: Omit<Component, 'id' | 'lastUpdated'>) => {
+      return createComponent(componentData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+      setDrawerOpen(false);
+      toast({
+        title: "Component created",
+        description: "Your component has been added to the library"
+      });
+    }
+  });
+
+  const updateComponentMutation = useMutation({
+    mutationFn: (componentData: Component) => {
+      return updateComponent(componentData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+      setDrawerOpen(false);
+      setEditingComponent(null);
+      toast({
+        title: "Component updated",
+        description: "Your component has been updated successfully"
+      });
+    }
+  });
+
+  const deleteComponentMutation = useMutation({
+    mutationFn: (id: string) => {
+      return deleteComponent(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+      setDeleteDialogOpen(false);
+      setComponentToDelete(null);
+      toast({
+        title: "Component deleted",
+        description: "The component has been removed from your library",
+        variant: "destructive"
+      });
+    }
+  });
+
   const filteredComponents = components.filter(component => {
     const matchesSearch = component.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           component.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -157,31 +189,12 @@ export function ComponentsPanel() {
   
   const categories = ["all", ...new Set(components.map(c => c.category))];
   
-  const handleCreateComponent = (component: Component) => {
-    if (editingComponent) {
-      setComponents(prevComponents => 
-        prevComponents.map(c => c.id === component.id ? component : c)
-      );
-      toast({
-        title: "Component updated",
-        description: `${component.name} has been updated successfully.`
-      });
+  const handleCreateComponent = (component: Component | Omit<Component, 'id' | 'lastUpdated'>) => {
+    if ('id' in component && editingComponent) {
+      updateComponentMutation.mutate(component as Component);
     } else {
-      setComponents(prevComponents => [...prevComponents, component]);
-      toast({
-        title: "Component created",
-        description: `${component.name} has been added to your component library.`
-      });
+      createComponentMutation.mutate(component as Omit<Component, 'id' | 'lastUpdated'>);
     }
-    
-    const updatedComponents = editingComponent 
-      ? components.map(c => c.id === component.id ? component : c)
-      : [...components, component];
-      
-    localStorage.setItem('components', JSON.stringify(updatedComponents));
-    
-    setDrawerOpen(false);
-    setEditingComponent(null);
   };
 
   const confirmDeleteComponent = (id: string) => {
@@ -191,26 +204,31 @@ export function ComponentsPanel() {
 
   const handleDeleteComponent = () => {
     if (!componentToDelete) return;
-    
-    const updatedComponents = components.filter(c => c.id !== componentToDelete);
-    setComponents(updatedComponents);
-    
-    localStorage.setItem('components', JSON.stringify(updatedComponents));
-    
-    toast({
-      title: "Component deleted",
-      description: "The component has been removed from your library.",
-      variant: "destructive"
-    });
-    
-    setDeleteDialogOpen(false);
-    setComponentToDelete(null);
+    deleteComponentMutation.mutate(componentToDelete);
   };
   
   const handleEditComponent = (component: Component) => {
     setEditingComponent(component);
     setDrawerOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Loading components...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          There was an error loading your components. Please try again later.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -300,7 +318,7 @@ export function ComponentsPanel() {
                       <span>{component.fields.length} fields</span>
                       <span className="mx-2">•</span>
                       <FileText className="h-3 w-3 mr-1" />
-                      <span>Last updated {component.lastUpdated}</span>
+                      <span>Last updated {new Date(component.lastUpdated).toLocaleDateString()}</span>
                     </div>
                     
                     <div className="flex justify-between items-center mt-4 pt-3 border-t">

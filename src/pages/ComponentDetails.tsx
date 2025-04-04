@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -8,12 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Component } from "@/components/components/ComponentsPanel";
+import { Component } from "@/services/ComponentService";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CreateComponentDrawer } from "@/components/components/CreateComponentDrawer";
 
-// Mock data - in a real app this would come from an API or state
 const getMockComponent = (id: string): Component | undefined => {
   const components = [
     {
@@ -61,14 +59,12 @@ export default function ComponentDetails() {
       if (foundComponent) {
         setComponent(foundComponent);
       } else {
-        // Handle component not found
         navigate("/components");
       }
     }
   }, [componentId, navigate]);
   
   const handleDelete = () => {
-    // Delete logic would go here
     toast({
       title: "Component deleted",
       description: "The component has been deleted successfully.",
@@ -149,7 +145,6 @@ export default function ComponentDetails() {
               </CardHeader>
               <CardContent>
                 <div className="p-6 border rounded-md bg-gray-50">
-                  {/* Here we would render an actual preview of the component */}
                   <div className="text-center py-10">
                     <p className="text-gray-500">Component preview would be rendered here</p>
                     <p className="text-sm text-gray-400 mt-2">For {component.name} with {component.fields.length} fields</p>

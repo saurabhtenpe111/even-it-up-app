@@ -19,25 +19,30 @@ export interface Component {
   lastUpdated: string;
 }
 
+// We'll use the collections table but with a specific structure for components
 export async function fetchComponents(): Promise<Component[]> {
   try {
     const { data, error } = await supabase
-      .from('components')
+      .from('collections')
       .select('*')
+      .eq('status', 'component') // Use status field to identify components
       .order('updated_at', { ascending: false });
 
     if (error) {
       throw error;
     }
 
-    return (data || []).map(component => {
+    return (data || []).map(item => {
+      // Parse the stored JSON data
+      const componentData = item.description ? JSON.parse(item.description) : {};
+      
       return {
-        id: component.id,
-        name: component.name,
-        description: component.description || '',
-        category: component.category || 'Other',
-        fields: component.fields || [],
-        lastUpdated: component.updated_at
+        id: item.id,
+        name: item.title,
+        description: componentData.description || '',
+        category: componentData.category || 'Other',
+        fields: componentData.fields || [],
+        lastUpdated: item.updated_at
       };
     });
   } catch (error) {
@@ -53,13 +58,20 @@ export async function fetchComponents(): Promise<Component[]> {
 
 export async function createComponent(component: Omit<Component, 'id' | 'lastUpdated'>): Promise<Component> {
   try {
+    // Store component-specific data in description as JSON
+    const componentData = {
+      description: component.description,
+      category: component.category,
+      fields: component.fields
+    };
+    
     const { data, error } = await supabase
-      .from('components')
+      .from('collections')
       .insert([{
-        name: component.name,
-        description: component.description,
-        category: component.category,
-        fields: component.fields,
+        title: component.name,
+        api_id: `component-${Date.now()}`,
+        description: JSON.stringify(componentData),
+        status: 'component', // Mark as a component
       }])
       .select()
       .single();
@@ -68,12 +80,15 @@ export async function createComponent(component: Omit<Component, 'id' | 'lastUpd
       throw error;
     }
 
+    // Parse the stored JSON data
+    const storedComponentData = JSON.parse(data.description || '{}');
+
     return {
       id: data.id,
-      name: data.name,
-      description: data.description || '',
-      category: data.category || 'Other',
-      fields: data.fields || [],
+      name: data.title,
+      description: storedComponentData.description || '',
+      category: storedComponentData.category || 'Other',
+      fields: storedComponentData.fields || [],
       lastUpdated: data.updated_at
     };
   } catch (error) {
@@ -89,15 +104,21 @@ export async function createComponent(component: Omit<Component, 'id' | 'lastUpd
 
 export async function updateComponent(component: Component): Promise<Component> {
   try {
+    // Store component-specific data in description as JSON
+    const componentData = {
+      description: component.description,
+      category: component.category,
+      fields: component.fields
+    };
+    
     const { data, error } = await supabase
-      .from('components')
+      .from('collections')
       .update({
-        name: component.name,
-        description: component.description,
-        category: component.category,
-        fields: component.fields,
+        title: component.name,
+        description: JSON.stringify(componentData),
       })
       .eq('id', component.id)
+      .eq('status', 'component')
       .select()
       .single();
 
@@ -105,12 +126,15 @@ export async function updateComponent(component: Component): Promise<Component> 
       throw error;
     }
 
+    // Parse the stored JSON data
+    const storedComponentData = JSON.parse(data.description || '{}');
+
     return {
       id: data.id,
-      name: data.name,
-      description: data.description || '',
-      category: data.category || 'Other',
-      fields: data.fields || [],
+      name: data.title,
+      description: storedComponentData.description || '',
+      category: storedComponentData.category || 'Other',
+      fields: storedComponentData.fields || [],
       lastUpdated: data.updated_at
     };
   } catch (error) {
@@ -127,9 +151,10 @@ export async function updateComponent(component: Component): Promise<Component> 
 export async function deleteComponent(id: string): Promise<void> {
   try {
     const { error } = await supabase
-      .from('components')
+      .from('collections')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('status', 'component');
 
     if (error) {
       throw error;

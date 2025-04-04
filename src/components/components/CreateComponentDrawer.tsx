@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -13,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, X, GripVertical, AlertCircle, Settings2, Copy, ChevronDown, ChevronUp, Eye } from "lucide-react";
-import { Component, ComponentField } from "./ComponentsPanel";
+import { Component, ComponentField } from "@/services/ComponentService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { adaptFieldsForPreview } from "@/utils/fieldAdapters";

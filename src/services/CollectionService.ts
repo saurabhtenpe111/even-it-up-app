@@ -212,7 +212,7 @@ export interface Field {
   description?: string;
   placeholder?: string;
   default_value?: any;
-  validation?: any;
+  validation?: ValidationSettings;
   options?: any;
   is_hidden?: boolean;
   position?: number;
@@ -221,18 +221,60 @@ export interface Field {
   config?: any;
   order?: number;
   helpText?: string;
+  appearance?: AppearanceSettings;
+  advanced?: AdvancedSettings;
+}
+
+export interface ValidationSettings {
+  required?: boolean;
+  minLengthEnabled?: boolean;
+  maxLengthEnabled?: boolean;
+  patternEnabled?: boolean;
+  customValidationEnabled?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  customMessage?: string;
+  customValidation?: string;
+  ariaRequired?: boolean;
+  ariaDescribedBy?: string;
+  ariaLabel?: string;
+  ariaLabelledBy?: string;
+  ariaInvalid?: boolean;
+  autocomplete?: string;
+}
+
+export interface AppearanceSettings {
+  floatLabel?: boolean;
+  filled?: boolean;
+  width?: number;
+  display_mode?: string;
+  showCharCount?: boolean;
+  customClass?: string;
+  customCss?: string;
+}
+
+export interface AdvancedSettings {
+  showButtons?: boolean;
+  buttonLayout?: 'horizontal' | 'vertical';
+  prefix?: string;
+  suffix?: string;
+  currency?: string;
+  locale?: string;
+  mask?: string;
+  customData?: Record<string, any>;
 }
 
 export interface FieldSettings {
   default_value?: any;
-  validation?: any;
+  validation?: ValidationSettings;
   options?: any;
   is_hidden?: boolean;
   ui_options?: any;
   helpText?: string;
   keyFilter?: string;
-  appearance?: any;
-  advanced?: any;
+  appearance?: AppearanceSettings;
+  advanced?: AdvancedSettings;
   [key: string]: any;
 }
 
@@ -269,7 +311,9 @@ export async function getFieldsForCollection(collectionId: string): Promise<Fiel
         required: field.required || false,
         ui_options: settings.ui_options || {},
         config: field.settings || {},
-        order: field.sort_order || 0
+        order: field.sort_order || 0,
+        appearance: settings.appearance || {},
+        advanced: settings.advanced || {}
       };
     });
   } catch (error) {
@@ -373,7 +417,9 @@ export async function createField(collectionId: string, fieldData: any): Promise
       required: field.required || false,
       ui_options: fieldSettings.ui_options,
       config: field.settings || {},
-      order: field.sort_order || 0
+      order: field.sort_order || 0,
+      appearance: fieldSettings.appearance,
+      advanced: fieldSettings.advanced
     };
   } catch (error: any) {
     console.error('Error creating field:', error);
@@ -456,7 +502,9 @@ export async function updateField(collectionId: string, fieldId: string, fieldDa
       required: field.required || false,
       ui_options: fieldSettings.ui_options,
       config: field.settings || {},
-      order: field.sort_order || 0
+      order: field.sort_order || 0,
+      appearance: fieldSettings.appearance,
+      advanced: fieldSettings.advanced
     };
   } catch (error: any) {
     console.error('Error updating field:', error);

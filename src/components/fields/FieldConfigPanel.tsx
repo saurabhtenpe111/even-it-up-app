@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -34,6 +33,7 @@ import { TagsInputField } from './inputs/TagsInputField';
 import { SlugInputField } from './inputs/SlugInputField';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { ValidationSettings } from '@/services/CollectionService';
 
 interface AppearanceSettings {
   floatLabel?: boolean;
@@ -145,9 +145,9 @@ export function FieldConfigPanel({
   onUpdateAdvanced 
 }: FieldConfigPanelProps) {
   const [activeTab, setActiveTab] = useState('general');
-  const [validationSettings, setValidationSettings] = useState({});
-  const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettings>({});
-  const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettings>({});
+  const [validationSettings, setValidationSettings] = useState<ValidationSettings>({});
+  const [appearanceSettings, setAppearanceSettings] = useState({});
+  const [advancedSettings, setAdvancedSettings] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
@@ -179,10 +179,8 @@ export function FieldConfigPanel({
     }
   });
 
-  // Re-initialize form when fieldData changes
   useEffect(() => {
     if (fieldData) {
-      // Reset form with the field data
       form.reset({
         ...fieldData,
         name: fieldData.name || '',
@@ -231,8 +229,13 @@ export function FieldConfigPanel({
     }
   };
 
-  const handleUpdateValidation = (data: any) => {
+  const handleUpdateValidation = (data: ValidationSettings) => {
+    console.log('Validation settings updated:', data);
     setValidationSettings(data);
+    
+    if (data.required !== undefined && form.getValues('required') !== data.required) {
+      form.setValue('required', data.required);
+    }
   };
 
   const handleUpdateAppearance = (data: any) => {

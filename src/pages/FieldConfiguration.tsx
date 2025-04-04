@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -13,14 +12,13 @@ import { FieldValidationPanel } from '@/components/fields/FieldValidationPanel';
 import { FieldLayoutPanel } from '@/components/fields/FieldLayoutPanel';
 import { toast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFieldsForCollection, createField, updateField, deleteField } from '@/services/CollectionService';
+import { getFieldsForCollection, createField, updateField, deleteField, Field, ValidationSettings } from '@/services/CollectionService';
 import { ComponentSelector } from '@/components/components/ComponentSelector';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CollectionPreviewForm } from '@/components/collection-preview/CollectionPreviewForm';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import JSONEditorField from '@/components/fields/inputs/JSONEditorField';
 
-// Field types data structure
 const fieldTypes = {
   'Text & Numbers': [
     { id: 'text', name: 'Input', description: 'Single line text field' },
@@ -114,6 +112,7 @@ export default function FieldConfiguration() {
   const [activeTab, setActiveTab] = useState('fields');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [advancedSettings, setAdvancedSettings] = useState<any>({});
+  const [validationSettings, setValidationSettings] = useState<ValidationSettings>({});
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [componentSelectorOpen, setComponentSelectorOpen] = useState(false);
   const [jsonPreviewOpen, setJsonPreviewOpen] = useState(false);
@@ -146,6 +145,7 @@ export default function FieldConfiguration() {
       setSelectedFieldType(null);
       setSelectedFieldId(null);
       setAdvancedSettings({});
+      setValidationSettings({});
       
       toast({
         title: "Field created",
@@ -217,6 +217,18 @@ export default function FieldConfiguration() {
     
     setSelectedFieldId(fieldId);
     setSelectedFieldType(null);
+    
+    if (selectedField && selectedField.validation) {
+      setValidationSettings(selectedField.validation);
+    } else {
+      setValidationSettings({});
+    }
+    
+    if (selectedField && selectedField.advanced) {
+      setAdvancedSettings(selectedField.advanced);
+    } else {
+      setAdvancedSettings({});
+    }
   };
   
   const handleDeleteField = (fieldId: string) => {
@@ -228,7 +240,6 @@ export default function FieldConfiguration() {
     
     try {
       if (selectedFieldId) {
-        // Update existing field
         await updateFieldMutation.mutateAsync({ 
           fieldId: selectedFieldId, 
           fieldData: {
@@ -237,7 +248,6 @@ export default function FieldConfiguration() {
           }
         });
       } else {
-        // Create new field
         await createFieldMutation.mutateAsync({
           ...fieldData,
           type: selectedFieldType,
@@ -253,6 +263,25 @@ export default function FieldConfiguration() {
 
   const handleUpdateAdvancedSettings = (settings: any) => {
     setAdvancedSettings(settings);
+  };
+  
+  const handleUpdateValidationSettings = (settings: ValidationSettings) => {
+    console.log('Updating validation settings in main component:', settings);
+    setValidationSettings(settings);
+    
+    if (selectedFieldId) {
+      const selectedField = fields.find(f => f.id === selectedFieldId);
+      if (selectedField) {
+        updateFieldMutation.mutate({
+          fieldId: selectedFieldId,
+          fieldData: {
+            ...selectedField,
+            validation: settings,
+            required: settings.required || false
+          }
+        });
+      }
+    }
   };
 
   const handlePreview = () => {
@@ -433,9 +462,11 @@ export default function FieldConfiguration() {
             <CardContent className="pt-6">
               <FieldValidationPanel 
                 fieldType={selectedFieldId ? fields.find(f => f.id === selectedFieldId)?.type || null : null} 
-                onUpdate={(data) => {
-                  console.log("Validation settings updated:", data);
-                }}
+                initialData={selectedFieldId && fields.find(f => f.id === selectedFieldId)?.validation ? 
+                  fields.find(f => f.id === selectedFieldId)?.validation : 
+                  {}
+                }
+                onUpdate={handleUpdateValidationSettings}
               />
             </CardContent>
           </Card>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ import { MarkdownEditorField } from './inputs/MarkdownEditorField';
 import { TagsInputField } from './inputs/TagsInputField';
 import { SlugInputField } from './inputs/SlugInputField';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
 
 interface AppearanceSettings {
   floatLabel?: boolean;
@@ -146,6 +148,7 @@ export function FieldConfigPanel({
   const [validationSettings, setValidationSettings] = useState({});
   const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettings>({});
   const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettings>({});
+  const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
     if (fieldData) {
@@ -176,15 +179,56 @@ export function FieldConfigPanel({
     }
   });
 
-  const handleSubmit = (values: any) => {
-    const combinedData = {
-      ...values,
-      validation: validationSettings,
-      appearance: appearanceSettings,
-      advanced: advancedSettings,
-    };
-    
-    onSave(combinedData);
+  // Re-initialize form when fieldData changes
+  useEffect(() => {
+    if (fieldData) {
+      // Reset form with the field data
+      form.reset({
+        ...fieldData,
+        name: fieldData.name || '',
+        description: fieldData.description || '',
+        helpText: fieldData.helpText || '',
+        required: fieldData.required || false,
+        ui_options: fieldData.ui_options || {
+          placeholder: '',
+          help_text: '',
+          display_mode: 'default',
+          showCharCount: false,
+          width: 100,
+          hidden_in_forms: false
+        }
+      });
+    }
+  }, [fieldData, form]);
+
+  const handleSubmit = async (values: any) => {
+    setIsSaving(true);
+    try {
+      const combinedData = {
+        ...values,
+        validation: validationSettings,
+        appearance: appearanceSettings,
+        advanced: advancedSettings,
+      };
+      
+      await onSave(combinedData);
+      
+      toast({
+        title: fieldData ? 'Field updated' : 'Field created',
+        description: `Field "${values.name}" has been ${fieldData ? 'updated' : 'created'} successfully`,
+        variant: 'default',
+      });
+    } catch (error) {
+      console.error('Error saving field:', error);
+      
+      toast({
+        title: 'Error saving field',
+        description: 'There was a problem saving the field. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleUpdateValidation = (data: any) => {
@@ -755,6 +799,7 @@ export function FieldConfigPanel({
             onClick={onCancel} 
             variant="outline"
             className="px-4 py-2"
+            disabled={isSaving}
           >
             Cancel
           </Button>
@@ -762,8 +807,9 @@ export function FieldConfigPanel({
             type="submit" 
             variant="default"
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700"
+            disabled={isSaving}
           >
-            Save Field
+            {isSaving ? 'Saving...' : 'Save Field'}
           </Button>
         </div>
       </form>

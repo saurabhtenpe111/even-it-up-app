@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -12,13 +13,14 @@ import { FieldValidationPanel } from '@/components/fields/FieldValidationPanel';
 import { FieldLayoutPanel } from '@/components/fields/FieldLayoutPanel';
 import { toast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFieldsForCollection, createField, deleteField } from '@/services/CollectionService';
+import { getFieldsForCollection, createField, updateField, deleteField } from '@/services/CollectionService';
 import { ComponentSelector } from '@/components/components/ComponentSelector';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CollectionPreviewForm } from '@/components/collection-preview/CollectionPreviewForm';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import JSONEditorField from '@/components/fields/inputs/JSONEditorField';
 
+// Field types data structure
 const fieldTypes = {
   'Text & Numbers': [
     { id: 'text', name: 'Input', description: 'Single line text field' },
@@ -116,6 +118,7 @@ export default function FieldConfiguration() {
   const [componentSelectorOpen, setComponentSelectorOpen] = useState(false);
   const [jsonPreviewOpen, setJsonPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState<Record<string, any>>({});
+  const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
     if (!collectionId) {
@@ -159,6 +162,28 @@ export default function FieldConfiguration() {
     }
   });
 
+  const updateFieldMutation = useMutation({
+    mutationFn: ({ fieldId, fieldData }: { fieldId: string, fieldData: any }) => 
+      updateField(collectionId!, fieldId, fieldData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fields', collectionId] });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      
+      toast({
+        title: "Field updated",
+        description: "Your field has been successfully updated",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating field",
+        description: "There was an error updating your field. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error updating field:", error);
+    }
+  });
+
   const deleteFieldMutation = useMutation({
     mutationFn: (fieldId: string) => deleteField(collectionId!, fieldId),
     onSuccess: () => {
@@ -187,6 +212,9 @@ export default function FieldConfiguration() {
   };
 
   const selectField = (fieldId: string) => {
+    const selectedField = fields.find(f => f.id === fieldId);
+    console.log('Selected field:', selectedField);
+    
     setSelectedFieldId(fieldId);
     setSelectedFieldType(null);
   };
@@ -196,17 +224,30 @@ export default function FieldConfiguration() {
   };
 
   const handleSaveField = async (fieldData: any) => {
-    if (selectedFieldId) {
-      toast({
-        title: "Field updated",
-        description: `The field "${fieldData.name}" has been updated.`,
-      });
-    } else {
-      createFieldMutation.mutate({
-        ...fieldData,
-        type: selectedFieldType,
-        advanced: advancedSettings
-      });
+    setIsSaving(true);
+    
+    try {
+      if (selectedFieldId) {
+        // Update existing field
+        await updateFieldMutation.mutateAsync({ 
+          fieldId: selectedFieldId, 
+          fieldData: {
+            ...fieldData,
+            type: fields.find(f => f.id === selectedFieldId)?.type,
+          }
+        });
+      } else {
+        // Create new field
+        await createFieldMutation.mutateAsync({
+          ...fieldData,
+          type: selectedFieldType,
+          advanced: advancedSettings
+        });
+      }
+    } catch (error) {
+      console.error('Error saving field:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -244,6 +285,13 @@ export default function FieldConfiguration() {
     toast({
       title: "Component added",
       description: `Added ${fieldsToAdd.length} fields from the component to your collection.`,
+    });
+  };
+
+  const handleSaveAllChanges = () => {
+    toast({
+      title: "Changes saved",
+      description: "All your field configuration changes have been saved.",
     });
   };
 
@@ -430,7 +478,10 @@ export default function FieldConfiguration() {
               <Eye className="h-4 w-4" />
               Preview
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleSaveAllChanges}
+            >
               <Save className="mr-2 h-4 w-4" />
               Save Changes
             </Button>

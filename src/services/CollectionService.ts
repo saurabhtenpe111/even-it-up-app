@@ -220,6 +220,7 @@ export interface Field {
   ui_options?: any;
   config?: any;
   order?: number;
+  helpText?: string;
 }
 
 export interface FieldSettings {
@@ -228,6 +229,10 @@ export interface FieldSettings {
   options?: any;
   is_hidden?: boolean;
   ui_options?: any;
+  helpText?: string;
+  keyFilter?: string;
+  appearance?: any;
+  advanced?: any;
   [key: string]: any;
 }
 
@@ -253,15 +258,16 @@ export async function getFieldsForCollection(collectionId: string): Promise<Fiel
         type: field.type,
         collection_id: field.collection_id,
         description: field.description || '',
+        helpText: settings.helpText || '',
         label: field.name,
-        placeholder: '',
+        placeholder: settings.ui_options?.placeholder || '',
         default_value: settings.default_value || null,
         validation: settings.validation || null,
         options: settings.options || null,
         is_hidden: settings.is_hidden || false,
         position: field.sort_order || 0,
         required: field.required || false,
-        ui_options: settings.ui_options || null,
+        ui_options: settings.ui_options || {},
         config: field.settings || {},
         order: field.sort_order || 0
       };
@@ -274,6 +280,8 @@ export async function getFieldsForCollection(collectionId: string): Promise<Fiel
 
 export async function createField(collectionId: string, fieldData: any): Promise<Field> {
   try {
+    console.log('Creating field with data:', fieldData);
+    
     const { data: collection, error: collectionError } = await supabase
       .from('collections')
       .select('id')
@@ -284,13 +292,41 @@ export async function createField(collectionId: string, fieldData: any): Promise
       throw new Error(`Collection with ID ${collectionId} not found`);
     }
 
+    // Generate API ID from name if not provided
+    const apiId = fieldData.api_id || 
+                 fieldData.name.toLowerCase()
+                   .replace(/\s+/g, '_')
+                   .replace(/[^a-z0-9_]/g, '');
+
+    // Create structured field settings
     const fieldSettings: FieldSettings = {
-      default_value: fieldData.default_value || null,
-      validation: fieldData.validation || null,
-      options: fieldData.options || null,
+      default_value: fieldData.defaultValue || null,
+      validation: fieldData.validation || {},
+      options: fieldData.options || {},
       is_hidden: fieldData.is_hidden || false,
-      ui_options: fieldData.ui_options || null
+      ui_options: {
+        placeholder: fieldData.ui_options?.placeholder || fieldData.placeholder || '',
+        help_text: fieldData.helpText || '',
+        display_mode: fieldData.ui_options?.display_mode || 'default',
+        showCharCount: fieldData.ui_options?.showCharCount || false,
+        width: fieldData.ui_options?.width || 100,
+        hidden_in_forms: fieldData.ui_options?.hidden_in_forms || false
+      },
+      helpText: fieldData.helpText || '',
+      keyFilter: fieldData.keyFilter || 'none',
+      appearance: fieldData.appearance || {},
+      advanced: fieldData.advanced || {}
     };
+
+    // Add field-specific properties to settings
+    if (fieldData.rows) fieldSettings.rows = fieldData.rows;
+    if (fieldData.min) fieldSettings.min = fieldData.min;
+    if (fieldData.max) fieldSettings.max = fieldData.max;
+    if (fieldData.length) fieldSettings.length = fieldData.length;
+    if (fieldData.maxTags) fieldSettings.maxTags = fieldData.maxTags;
+    if (fieldData.prefix) fieldSettings.prefix = fieldData.prefix;
+    if (fieldData.suffix) fieldSettings.suffix = fieldData.suffix;
+    if (fieldData.minHeight) fieldSettings.minHeight = fieldData.minHeight;
 
     const { data: field, error } = await supabase
       .from('fields')
@@ -298,7 +334,7 @@ export async function createField(collectionId: string, fieldData: any): Promise
         {
           collection_id: collectionId,
           name: fieldData.name,
-          api_id: fieldData.api_id || fieldData.name.toLowerCase().replace(/\s+/g, '_'),
+          api_id: apiId,
           type: fieldData.type,
           description: fieldData.description || '',
           required: fieldData.required || false,
@@ -317,6 +353,8 @@ export async function createField(collectionId: string, fieldData: any): Promise
       throw new Error('Failed to create field - no data returned');
     }
 
+    console.log('Field created successfully:', field);
+
     return {
       id: field.id,
       name: field.name,
@@ -324,8 +362,9 @@ export async function createField(collectionId: string, fieldData: any): Promise
       type: field.type,
       collection_id: field.collection_id,
       description: field.description || '',
+      helpText: fieldSettings.helpText || '',
       label: field.name,
-      placeholder: '',
+      placeholder: fieldSettings.ui_options.placeholder || '',
       default_value: fieldSettings.default_value,
       validation: fieldSettings.validation,
       options: fieldSettings.options,
@@ -342,10 +381,105 @@ export async function createField(collectionId: string, fieldData: any): Promise
   }
 }
 
+export async function updateField(collectionId: string, fieldId: string, fieldData: any): Promise<Field> {
+  try {
+    console.log('Updating field with data:', fieldData);
+    
+    // Create structured field settings
+    const fieldSettings: FieldSettings = {
+      default_value: fieldData.defaultValue || null,
+      validation: fieldData.validation || {},
+      options: fieldData.options || {},
+      is_hidden: fieldData.is_hidden || false,
+      ui_options: {
+        placeholder: fieldData.ui_options?.placeholder || fieldData.placeholder || '',
+        help_text: fieldData.helpText || '',
+        display_mode: fieldData.ui_options?.display_mode || 'default',
+        showCharCount: fieldData.ui_options?.showCharCount || false,
+        width: fieldData.ui_options?.width || 100,
+        hidden_in_forms: fieldData.ui_options?.hidden_in_forms || false
+      },
+      helpText: fieldData.helpText || '',
+      keyFilter: fieldData.keyFilter || 'none',
+      appearance: fieldData.appearance || {},
+      advanced: fieldData.advanced || {}
+    };
+
+    // Add field-specific properties to settings
+    if (fieldData.rows) fieldSettings.rows = fieldData.rows;
+    if (fieldData.min) fieldSettings.min = fieldData.min;
+    if (fieldData.max) fieldSettings.max = fieldData.max;
+    if (fieldData.length) fieldSettings.length = fieldData.length;
+    if (fieldData.maxTags) fieldSettings.maxTags = fieldData.maxTags;
+    if (fieldData.prefix) fieldSettings.prefix = fieldData.prefix;
+    if (fieldData.suffix) fieldSettings.suffix = fieldData.suffix;
+    if (fieldData.minHeight) fieldSettings.minHeight = fieldData.minHeight;
+    
+    const { data: field, error } = await supabase
+      .from('fields')
+      .update({
+        name: fieldData.name,
+        description: fieldData.description || '',
+        required: fieldData.required || false,
+        settings: fieldSettings
+      })
+      .eq('id', fieldId)
+      .eq('collection_id', collectionId)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!field) {
+      throw new Error('Failed to update field - no data returned');
+    }
+
+    console.log('Field updated successfully:', field);
+
+    return {
+      id: field.id,
+      name: field.name,
+      api_id: field.api_id,
+      type: field.type,
+      collection_id: field.collection_id,
+      description: field.description || '',
+      helpText: fieldSettings.helpText || '',
+      label: field.name,
+      placeholder: fieldSettings.ui_options.placeholder || '',
+      default_value: fieldSettings.default_value,
+      validation: fieldSettings.validation,
+      options: fieldSettings.options,
+      is_hidden: fieldSettings.is_hidden,
+      position: field.sort_order || 0,
+      required: field.required || false,
+      ui_options: fieldSettings.ui_options,
+      config: field.settings || {},
+      order: field.sort_order || 0
+    };
+  } catch (error: any) {
+    console.error('Error updating field:', error);
+    throw error;
+  }
+}
+
 export const deleteField = async (collectionId: string, fieldId: string): Promise<void> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  console.log(`Deleting field ${fieldId} from collection ${collectionId}`);
-  
-  return Promise.resolve();
-};
+  try {
+    const { error } = await supabase
+      .from('fields')
+      .delete()
+      .eq('id', fieldId)
+      .eq('collection_id', collectionId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    console.log(`Field ${fieldId} deleted successfully`);
+    return Promise.resolve();
+  } catch (error) {
+    console.error(`Error deleting field ${fieldId}:`, error);
+    throw error;
+  }
+}

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { FieldAdvancedPanel } from "./FieldAdvancedPanel";
 import { toast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FieldAdvancedTabProps {
   fieldType: string | null;
@@ -12,6 +13,7 @@ interface FieldAdvancedTabProps {
 export function FieldAdvancedTab({ fieldType, fieldData, onUpdate }: FieldAdvancedTabProps) {
   const [advancedSettings, setAdvancedSettings] = useState<any>(fieldData?.advanced || {});
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Update local state when fieldData changes
   useEffect(() => {
@@ -54,6 +56,16 @@ export function FieldAdvancedTab({ fieldType, fieldData, onUpdate }: FieldAdvanc
       setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

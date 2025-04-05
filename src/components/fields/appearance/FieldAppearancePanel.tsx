@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { UIVariantsTab } from "./UIVariantsTab";
@@ -35,13 +35,31 @@ export function FieldAppearancePanel({
       label: '#64748b'
     },
     customCSS: initialData?.customCSS || '',
+    isDarkMode: initialData?.isDarkMode || false,
     ...initialData
   });
+  
+  // Update settings when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setSettings(prevSettings => ({
+        ...prevSettings,
+        ...initialData,
+        colors: initialData?.colors || prevSettings.colors,
+        isDarkMode: initialData?.isDarkMode || prevSettings.isDarkMode
+      }));
+      
+      if (initialData.isDarkMode !== undefined) {
+        setIsDarkMode(initialData.isDarkMode);
+      }
+    }
+  }, [initialData]);
   
   // Update settings and save to parent
   const updateSettings = (newSettings: Partial<typeof settings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
+    // Always call onSave to ensure settings are saved to the database
     onSave(updatedSettings);
   };
   
@@ -65,7 +83,10 @@ export function FieldAppearancePanel({
                 previewState={previewState}
                 isDarkMode={isDarkMode}
                 onPreviewStateChange={setPreviewState}
-                onDarkModeChange={setIsDarkMode}
+                onDarkModeChange={(isDark) => {
+                  setIsDarkMode(isDark);
+                  updateSettings({ isDarkMode: isDark });
+                }}
               />
             </CardContent>
           </Card>

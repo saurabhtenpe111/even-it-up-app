@@ -39,6 +39,10 @@ export function FieldAdvancedTab({ fieldType, fieldData, onUpdate }: FieldAdvanc
         updatedData.appearance = fieldData.appearance;
       }
       
+      // Log what we're saving to debug any issues
+      console.log("Saving advanced settings:", advancedSettings);
+      console.log("Updated field data:", updatedData);
+      
       onUpdate(updatedData);
       
       toast({

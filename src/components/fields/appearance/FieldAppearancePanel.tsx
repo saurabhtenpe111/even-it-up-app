@@ -8,6 +8,8 @@ import { ThemeTab } from "./ThemeTab";
 import { CustomCSSTab } from "./CustomCSSTab";
 import { FieldPreview } from "./FieldPreview";
 import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { SaveIcon } from "lucide-react";
 
 interface FieldAppearancePanelProps {
   fieldType: string | null;
@@ -23,6 +25,7 @@ export function FieldAppearancePanel({
   const [activeSubtab, setActiveSubtab] = useState("uiVariants");
   const [previewState, setPreviewState] = useState<'default' | 'hover' | 'focus' | 'disabled' | 'error'>('default');
   const [isDarkMode, setIsDarkMode] = useState(initialData?.isDarkMode || false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // State for appearance settings
   const [settings, setSettings] = useState({
@@ -52,6 +55,8 @@ export function FieldAppearancePanel({
     ...initialData
   });
   
+  console.log("Initial appearance data:", initialData);
+  
   // Update settings when initialData changes
   useEffect(() => {
     if (initialData) {
@@ -73,14 +78,31 @@ export function FieldAppearancePanel({
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
     
-    // Always call onSave to ensure settings are saved to the database
-    onSave(updatedSettings);
+    console.log("Updated appearance settings:", updatedSettings);
+  };
+  
+  // Save all settings to parent component
+  const saveAllSettings = () => {
+    setIsSaving(true);
     
-    // Optional: Show a toast notification
-    toast({
-      title: "Appearance settings updated",
-      description: "Your changes have been saved"
-    });
+    try {
+      console.log("Saving appearance settings:", settings);
+      onSave(settings);
+      
+      toast({
+        title: "Appearance settings saved",
+        description: "Your changes have been saved successfully"
+      });
+    } catch (error) {
+      console.error("Error saving appearance settings:", error);
+      toast({
+        title: "Error saving settings",
+        description: "There was a problem saving your appearance settings",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   return (
@@ -140,6 +162,17 @@ export function FieldAppearancePanel({
           />
         </TabsContent>
       </Tabs>
+      
+      <div className="flex justify-end">
+        <Button 
+          onClick={saveAllSettings} 
+          disabled={isSaving}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <SaveIcon className="mr-2 h-4 w-4" />
+          {isSaving ? "Saving..." : "Save All Appearance Settings"}
+        </Button>
+      </div>
     </div>
   );
 }

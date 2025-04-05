@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ColorPickerField } from "./ColorPickerField";
+import { toast } from "@/hooks/use-toast";
 
 interface ColorsTabProps {
   settings: any;
@@ -11,24 +12,49 @@ interface ColorsTabProps {
 
 export function ColorsTab({ settings, onUpdate }: ColorsTabProps) {
   const [activeColorTab, setActiveColorTab] = useState("border");
-  
-  const colors = {
+  const [colors, setColors] = useState({
     border: settings.colors?.border || "#e2e8f0",
     text: settings.colors?.text || "#1e293b",
     background: settings.colors?.background || "#ffffff",
     focus: settings.colors?.focus || "#3b82f6",
     label: settings.colors?.label || "#64748b"
-  };
+  });
+  
+  // Update local state when settings change from parent
+  useEffect(() => {
+    if (settings.colors) {
+      setColors({
+        border: settings.colors.border || "#e2e8f0",
+        text: settings.colors.text || "#1e293b",
+        background: settings.colors.background || "#ffffff",
+        focus: settings.colors.focus || "#3b82f6",
+        label: settings.colors.label || "#64748b"
+      });
+    }
+  }, [settings]);
   
   const handleColorChange = (type: string, value: string) => {
     const newColors = {
-      ...settings.colors || {},
+      ...colors,
       [type]: value
     };
     
+    setColors(newColors);
+    
+    // Log the updated colors for debugging
+    console.log("Updated colors:", newColors);
+    
+    // Update the parent component with the new colors
     onUpdate({
       ...settings,
       colors: newColors
+    });
+    
+    // Show a toast for better user feedback
+    toast({
+      title: "Color updated",
+      description: `${type.charAt(0).toUpperCase() + type.slice(1)} color has been updated`,
+      variant: "default"
     });
   };
   

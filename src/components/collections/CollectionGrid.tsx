@@ -21,11 +21,10 @@ export function CollectionGrid({ collections, viewMode, sortOption, onCreateNew,
     if (sortOption === 'alphabetical') {
       return a.title.localeCompare(b.title);
     } else if (sortOption === 'oldest') {
-      // This is a simplification - in reality, you'd parse the dates
-      return 1; // Just for demo - reverse of 'latest'
+      return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
     } else {
       // Default to 'latest'
-      return -1; // Just for demo - newest first
+      return new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
     }
   });
 
@@ -87,6 +86,24 @@ export function CollectionGrid({ collections, viewMode, sortOption, onCreateNew,
     );
   }
 
+  if (collections.length === 0 && !isLoading) {
+    return (
+      <div className="text-center py-8">
+        <h3 className="text-lg font-medium text-gray-500">No collections found</h3>
+        <p className="text-gray-400 mt-2">Create your first collection to get started</p>
+        <div 
+          className="mt-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center p-6 mx-auto max-w-sm hover:bg-gray-100 transition-colors cursor-pointer"
+          onClick={onCreateNew}
+        >
+          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+            <span className="text-xl text-gray-400">+</span>
+          </div>
+          <p className="text-gray-600 text-sm">Create Collection</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (viewMode === 'list') {
     return (
       <div className="bg-white rounded-lg border border-gray-100 overflow-hidden overflow-x-auto">

@@ -31,7 +31,11 @@ export function CollectionPreviewForm({
 
   useEffect(() => {
     if (fields && fields.length > 0) {
+      console.log("Original fields for preview:", fields);
+      
       const adaptedFields = adaptFieldsForPreview(fields);
+      console.log("Adapted fields for preview:", adaptedFields);
+      
       setFieldDefinitions(adaptedFields);
       
       const initialData = fields.reduce((acc: Record<string, any>, field: any) => {
@@ -52,6 +56,9 @@ export function CollectionPreviewForm({
       ...prevData,
       [fieldId]: value,
     }));
+    
+    // Log changes for debugging
+    console.log(`Field ${fieldId} changed to:`, value);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,19 +77,55 @@ export function CollectionPreviewForm({
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center">Loading collection fields...</div>;
+    return (
+      <Card className="border-0 shadow-none">
+        <CardContent className="px-4 py-6">
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-5 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end mt-6">
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (error) {
-    return <div className="p-4 text-center text-red-500">Error: {(error as Error).message}</div>;
+    return (
+      <Card className="border-0 shadow-none">
+        <CardContent className="px-4 py-6">
+          <div className="p-4 text-center text-red-500 border border-red-200 rounded-lg bg-red-50">
+            <h3 className="font-medium">Error loading preview</h3>
+            <p className="mt-2 text-sm">{(error as Error).message}</p>
+            <Button 
+              variant="outline" 
+              className="mt-4" 
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!fields || fields.length === 0) {
     return (
-      <div className="p-4 text-center">
-        <p className="text-gray-500">No fields found for this collection.</p>
-        <p className="text-sm mt-2">Add some fields to the collection to preview content creation.</p>
-      </div>
+      <Card className="border-0 shadow-none">
+        <CardContent className="px-4 py-6">
+          <div className="p-4 text-center">
+            <p className="text-gray-500">No fields found for this collection.</p>
+            <p className="text-sm mt-2 text-gray-400">Add some fields to the collection to preview content creation.</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 

@@ -80,6 +80,16 @@ export function FieldRenderer({ field, formData, titleField, onInputChange }: Fi
       }
     }
     
+    if (appearance.textAlign) {
+      switch(appearance.textAlign) {
+        case 'left': customStyle.textAlign = 'left'; break;
+        case 'center': customStyle.textAlign = 'center'; break;
+        case 'right': customStyle.textAlign = 'right'; break;
+        case 'justify': customStyle.textAlign = 'justify'; break;
+        default: break;
+      }
+    }
+    
     if (appearance.customCss) {
       try {
         const cssEntries = appearance.customCss.split(';')
@@ -92,7 +102,8 @@ export function FieldRenderer({ field, formData, titleField, onInputChange }: Fi
           
         cssEntries.forEach(([prop, value]: [string, string]) => {
           if (prop && value) {
-            customStyle[prop as keyof React.CSSProperties] = value;
+            const safeValue = value;
+            (customStyle as any)[prop] = safeValue;
           }
         });
       } catch (error) {
@@ -123,6 +134,7 @@ export function FieldRenderer({ field, formData, titleField, onInputChange }: Fi
           fieldSize={field.appearance?.fieldSize}
           labelSize={field.appearance?.labelSize}
           customClass={field.appearance?.customClass}
+          colors={field.appearance?.colors}
         />
       );
     case 'textarea':
@@ -156,6 +168,7 @@ export function FieldRenderer({ field, formData, titleField, onInputChange }: Fi
           buttonLayout={field.advanced?.buttonLayout || "horizontal"}
           prefix={field.advanced?.prefix}
           suffix={field.advanced?.suffix}
+          colors={field.appearance?.colors}
         />
       );
     case 'boolean':

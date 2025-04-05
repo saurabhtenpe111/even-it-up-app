@@ -32,6 +32,11 @@ export function FieldAdvancedTab({ fieldType, fieldData, onUpdate }: FieldAdvanc
         advanced: advancedSettings
       };
       
+      // Ensure we don't lose appearance settings if they exist
+      if (fieldData?.appearance) {
+        updatedData.appearance = fieldData.appearance;
+      }
+      
       onUpdate(updatedData);
       
       toast({

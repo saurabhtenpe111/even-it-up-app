@@ -7,6 +7,7 @@ import { ColorsTab } from "./ColorsTab";
 import { ThemeTab } from "./ThemeTab";
 import { CustomCSSTab } from "./CustomCSSTab";
 import { FieldPreview } from "./FieldPreview";
+import { toast } from "@/hooks/use-toast";
 
 interface FieldAppearancePanelProps {
   fieldType: string | null;
@@ -36,6 +37,18 @@ export function FieldAppearancePanel({
     },
     customCSS: initialData?.customCSS || '',
     isDarkMode: initialData?.isDarkMode || false,
+    textAlign: initialData?.textAlign || 'left',
+    labelPosition: initialData?.labelPosition || 'top',
+    labelWidth: initialData?.labelWidth || 30,
+    floatLabel: initialData?.floatLabel || false,
+    filled: initialData?.filled || false,
+    showBorder: initialData?.showBorder !== false,
+    showBackground: initialData?.showBackground || false,
+    roundedCorners: initialData?.roundedCorners || 'medium',
+    fieldSize: initialData?.fieldSize || 'medium',
+    labelSize: initialData?.labelSize || 'medium',
+    customCss: initialData?.customCss || '',
+    customClass: initialData?.customClass || '',
     ...initialData
   });
   
@@ -59,8 +72,15 @@ export function FieldAppearancePanel({
   const updateSettings = (newSettings: Partial<typeof settings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
+    
     // Always call onSave to ensure settings are saved to the database
     onSave(updatedSettings);
+    
+    // Optional: Show a toast notification
+    toast({
+      title: "Appearance settings updated",
+      description: "Your changes have been saved"
+    });
   };
   
   return (

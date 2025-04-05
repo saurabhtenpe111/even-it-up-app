@@ -18,6 +18,14 @@ export interface InputTextFieldProps
   ariaLabel?: string;
   ariaDescribedBy?: string;
   containerClassName?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  labelPosition?: 'top' | 'left';
+  labelWidth?: number;
+  showBorder?: boolean;
+  roundedCorners?: 'none' | 'small' | 'medium' | 'large';
+  fieldSize?: 'small' | 'medium' | 'large';
+  labelSize?: 'small' | 'medium' | 'large';
+  customClass?: string;
 }
 
 export function InputTextField({
@@ -42,6 +50,15 @@ export function InputTextField({
   onChange,
   onFocus,
   onBlur,
+  textAlign = 'left',
+  labelPosition = 'top',
+  labelWidth = 30,
+  showBorder = true,
+  roundedCorners = 'medium',
+  fieldSize = 'medium',
+  labelSize = 'medium',
+  customClass,
+  style,
   ...props
 }: InputTextFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
@@ -128,37 +145,81 @@ export function InputTextField({
   };
 
   // Determine input size class
-  const sizeClass = {
-    small: "h-8 text-xs px-2 py-1",
-    medium: "h-10 text-sm px-3 py-2",
-    large: "h-12 text-base px-4 py-3",
-  }[size];
+  const getSizeClass = () => {
+    switch (fieldSize) {
+      case 'small': return "h-8 text-xs px-2 py-1";
+      case 'large': return "h-12 text-base px-4 py-3";
+      default: return "h-10 text-sm px-3 py-2";
+    }
+  };
 
-  // Determine if label should float (either specified or when input has value/focused)
+  // Get label size class
+  const getLabelSizeClass = () => {
+    switch (labelSize) {
+      case 'small': return "text-xs";
+      case 'large': return "text-lg";
+      default: return "text-sm";
+    }
+  };
+
+  // Get border radius class
+  const getBorderRadiusClass = () => {
+    switch (roundedCorners) {
+      case 'none': return "rounded-none";
+      case 'small': return "rounded-sm";
+      case 'large': return "rounded-lg";
+      default: return "rounded-md";
+    }
+  };
+
+  // Get container layout styles
+  const containerStyles: React.CSSProperties = {
+    display: labelPosition === 'left' ? 'flex' : 'block',
+    alignItems: labelPosition === 'left' ? 'center' : undefined,
+    gap: labelPosition === 'left' ? '8px' : undefined,
+  };
+  
+  // Get label styles
+  const labelStyles: React.CSSProperties = {
+    width: labelPosition === 'left' ? `${labelWidth}%` : 'auto',
+    textAlign: textAlign as 'left' | 'center' | 'right',
+  };
+  
+  // Get input styles
+  const inputStyles: React.CSSProperties = {
+    textAlign: textAlign as 'left' | 'center' | 'right',
+    width: labelPosition === 'left' ? `${100 - labelWidth}%` : '100%',
+    ...(style || {})
+  };
+
+  // Determine if label should float
   const shouldFloatLabel = floatLabel && (isFocused || inputValue);
 
   return (
-    <div className={cn("relative space-y-2", containerClassName)}>
-      <div className="relative">
-        {label && !floatLabel && (
-          <Label
-            htmlFor={id}
-            className={cn(
-              "mb-2 block",
-              invalid ? "text-red-500" : "",
-              disabled ? "text-gray-400 cursor-not-allowed" : "",
-              required ? "after:content-['*'] after:text-red-500 after:ml-0.5" : ""
-            )}
-          >
-            {label}
-          </Label>
-        )}
+    <div className={cn("relative", containerClassName)} style={containerStyles}>
+      {label && !floatLabel && (
+        <Label
+          htmlFor={id}
+          className={cn(
+            getLabelSizeClass(),
+            labelPosition === 'top' ? "mb-2 block" : "",
+            invalid ? "text-red-500" : "",
+            disabled ? "text-gray-400 cursor-not-allowed" : "",
+            required ? "after:content-['*'] after:text-red-500 after:ml-0.5" : ""
+          )}
+          style={labelStyles}
+        >
+          {label}
+        </Label>
+      )}
 
+      <div className="relative" style={{ width: labelPosition === 'left' ? `${100 - labelWidth}%` : '100%' }}>
         {label && floatLabel && (
           <Label
             htmlFor={id}
             className={cn(
               "absolute transition-all duration-200 pointer-events-none",
+              getLabelSizeClass(),
               shouldFloatLabel
                 ? "-top-2.5 left-2 text-xs bg-white px-1 z-10"
                 : "top-1/2 left-3 -translate-y-1/2",
@@ -176,11 +237,14 @@ export function InputTextField({
           id={id}
           ref={inputRef}
           className={cn(
-            sizeClass,
+            getSizeClass(),
+            getBorderRadiusClass(),
             filled ? "bg-gray-100" : "",
+            !showBorder ? "border-0" : "",
             invalid ? "border-red-500 focus:ring-red-500" : "",
             floatLabel ? "pt-4 pb-2" : "",
-            className
+            className,
+            customClass
           )}
           value={value !== undefined ? value : inputValue}
           aria-invalid={invalid}
@@ -194,6 +258,7 @@ export function InputTextField({
           onBlur={handleBlur}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          style={inputStyles}
           {...props}
         />
       </div>

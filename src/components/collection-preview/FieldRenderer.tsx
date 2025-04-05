@@ -34,6 +34,7 @@ import { SuperHeaderField } from '@/components/fields/inputs/SuperHeaderField';
 import { DetailGroupField } from '@/components/fields/inputs/DetailGroupField';
 import { RawGroupField } from '@/components/fields/inputs/RawGroupField';
 import { CollectionItemField } from '@/components/fields/inputs/CollectionItemField';
+import { cn } from '@/lib/utils';
 
 interface FieldRendererProps {
   field: any;
@@ -53,15 +54,75 @@ export function FieldRenderer({ field, formData, titleField, onInputChange }: Fi
     className: "mb-5",
   };
 
+  const applyAppearanceStyles = (element: JSX.Element) => {
+    if (!field.appearance) return element;
+    
+    const appearance = field.appearance;
+    const customStyle: React.CSSProperties = {};
+    const customClass = appearance.customClass || '';
+    
+    if (appearance.colors) {
+      if (appearance.colors.background) customStyle.backgroundColor = appearance.colors.background;
+      if (appearance.colors.border) customStyle.borderColor = appearance.colors.border;
+      if (appearance.colors.text) customStyle.color = appearance.colors.text;
+    }
+    
+    if (appearance.showBorder === false) {
+      customStyle.border = 'none';
+    }
+    
+    if (appearance.roundedCorners) {
+      switch(appearance.roundedCorners) {
+        case 'none': customStyle.borderRadius = '0'; break;
+        case 'small': customStyle.borderRadius = '0.25rem'; break;
+        case 'medium': customStyle.borderRadius = '0.375rem'; break;
+        case 'large': customStyle.borderRadius = '0.5rem'; break;
+      }
+    }
+    
+    if (appearance.customCss) {
+      try {
+        const cssEntries = appearance.customCss.split(';')
+          .filter((entry: string) => entry.trim() !== '')
+          .map((entry: string) => {
+            const [prop, value] = entry.split(':').map((part: string) => part.trim());
+            const camelProp = prop.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+            return [camelProp, value];
+          });
+          
+        cssEntries.forEach(([prop, value]: [string, string]) => {
+          if (prop && value) {
+            customStyle[prop as keyof React.CSSProperties] = value;
+          }
+        });
+      } catch (error) {
+        console.error('Error parsing custom CSS:', error);
+      }
+    }
+    
+    return React.cloneElement(element, {
+      style: { ...element.props.style, ...customStyle },
+      className: cn(element.props.className, customClass)
+    });
+  };
+
   switch (field.type) {
     case 'text':
-      return (
+      return applyAppearanceStyles(
         <InputTextField
           {...commonProps}
           placeholder={field.placeholder || `Enter ${field.name}`}
           keyFilter={field.keyFilter || "none"}
           floatLabel={field.appearance?.floatLabel}
           filled={field.appearance?.filled}
+          textAlign={field.appearance?.textAlign}
+          labelPosition={field.appearance?.labelPosition}
+          labelWidth={field.appearance?.labelWidth}
+          showBorder={field.appearance?.showBorder}
+          roundedCorners={field.appearance?.roundedCorners}
+          fieldSize={field.appearance?.fieldSize}
+          labelSize={field.appearance?.labelSize}
+          customClass={field.appearance?.customClass}
         />
       );
     case 'textarea':

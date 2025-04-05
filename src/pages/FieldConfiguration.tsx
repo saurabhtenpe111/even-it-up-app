@@ -18,7 +18,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { CollectionPreviewForm } from '@/components/collection-preview/CollectionPreviewForm';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import JSONEditorField from '@/components/fields/inputs/JSONEditorField';
-import { FieldAppearancePanel } from '@/components/fields/appearance/FieldAppearancePanel';
 import { FieldAdvancedPanel } from '@/components/fields/FieldAdvancedPanel';
 
 const fieldTypes = {
@@ -597,8 +596,8 @@ export default function FieldConfiguration() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold mb-1">Field Configuration</h1>
-              <p className="text-gray-500">
-                {collectionId ? `Configuring fields for "${collectionId}" collection` : 'Configure fields for your collection'}
+              <p className="text-sm text-gray-500">
+                Configuring fields for "{collectionId}" collection
               </p>
             </div>
           </div>
@@ -637,15 +636,14 @@ export default function FieldConfiguration() {
           </div>
         </div>
         
-        <Tabs defaultValue="fields" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full max-w-md grid grid-cols-4 mb-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
             <TabsTrigger value="fields">Fields</TabsTrigger>
             <TabsTrigger value="validation">Validation</TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
           
-          <TabsContent value={activeTab}>
+          <TabsContent value="fields">
             {renderTabContent()}
           </TabsContent>
         </Tabs>

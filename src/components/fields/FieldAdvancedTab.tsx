@@ -19,6 +19,8 @@ export function FieldAdvancedTab({ fieldType, fieldData, onUpdate }: FieldAdvanc
   useEffect(() => {
     if (fieldData?.advanced) {
       setAdvancedSettings(fieldData.advanced);
+    } else {
+      setAdvancedSettings({});
     }
   }, [fieldData]);
 

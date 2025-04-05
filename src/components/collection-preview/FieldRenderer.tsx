@@ -1,495 +1,425 @@
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DateCalendarField } from '@/components/fields/inputs/DateCalendarField';
-import { InputTextField } from '@/components/fields/inputs/InputTextField';
-import { NumberInputField } from '@/components/fields/inputs/NumberInputField';
-import { SelectButtonField } from '@/components/form-fields/SelectButtonField';
-import { PasswordInputField } from '@/components/fields/inputs/PasswordInputField';
-import { MaskInputField } from '@/components/fields/inputs/MaskInputField';
-import { OTPInputField } from '@/components/fields/inputs/OTPInputField';
-import { AutocompleteInputField } from '@/components/fields/inputs/AutocompleteInputField';
-import { BlockEditorField } from '@/components/fields/inputs/BlockEditorField';
-import { WysiwygEditorField } from '@/components/fields/inputs/WysiwygEditorField';
-import { MarkdownEditorField } from '@/components/fields/inputs/MarkdownEditorField';
-import { TagsInputField } from '@/components/fields/inputs/TagsInputField';
-import { SlugInputField } from '@/components/fields/inputs/SlugInputField';
-import { ColorPickerField } from '@/components/fields/inputs/ColorPickerField';
-import { RadioCardsField } from '@/components/fields/inputs/RadioCardsField';
-import { CheckboxCardsField } from '@/components/fields/inputs/CheckboxCardsField';
-import { FileInputField } from '@/components/fields/inputs/FileInputField';
-import { MultiFileInputField } from '@/components/fields/inputs/MultiFileInputField';
-import { JSONEditorField } from '@/components/fields/inputs/JSONEditorField';
-import { RatingField } from '@/components/fields/inputs/RatingField';
-import { SliderField } from '@/components/fields/inputs/SliderField';
-import { HashInputField } from '@/components/fields/inputs/HashInputField';
-import { IconSelectField } from '@/components/fields/inputs/IconSelectField';
-import { ListboxField } from '@/components/fields/inputs/ListboxField';
-import { TreeViewField } from '@/components/fields/inputs/TreeViewField';
-import { InlineRepeaterField } from '@/components/fields/inputs/InlineRepeaterField';
-import { DividerField } from '@/components/fields/inputs/DividerField';
-import { SuperHeaderField } from '@/components/fields/inputs/SuperHeaderField';
-import { DetailGroupField } from '@/components/fields/inputs/DetailGroupField';
-import { RawGroupField } from '@/components/fields/inputs/RawGroupField';
-import { CollectionItemField } from '@/components/fields/inputs/CollectionItemField';
-import { cn } from '@/lib/utils';
+import React from "react";
+import InputTextField from "../fields/inputs/InputTextField";
+import PasswordInputField from "../fields/inputs/PasswordInputField";
+import NumberInputField from "../fields/inputs/NumberInputField";
+import TextareaField from "../fields/inputs/TextareaField";
+import MarkdownEditorField from "../fields/inputs/MarkdownEditorField";
+import WysiwygEditorField from "../fields/inputs/WysiwygEditorField";
+import BlockEditorField from "../fields/inputs/BlockEditorField";
+import FileUploadField from "../fields/inputs/FileUploadField";
+import ImageUploadField from "../fields/inputs/ImageUploadField";
+import DatePickerField from "../fields/inputs/DatePickerField";
+import SelectField from "../fields/inputs/SelectField";
+import MultiSelectField from "../fields/inputs/MultiSelectField";
+import ToggleField from "../fields/inputs/ToggleField";
+import CheckboxGroupField from "../fields/inputs/CheckboxGroupField";
+import RadioGroupField from "../fields/inputs/RadioGroupField";
+import ColorPickerField from "../fields/inputs/ColorPickerField";
+import SlugInputField from "../fields/inputs/SlugInputField";
+import TagsInputField from "../fields/inputs/TagsInputField";
+import MaskInputField from "../fields/inputs/MaskInputField";
+import OTPInputField from "../fields/inputs/OTPInputField";
+import AutocompleteInputField from "../fields/inputs/AutocompleteInputField";
+import { cn } from "@/lib/utils";
 
 interface FieldRendererProps {
   field: any;
-  formData: Record<string, any>;
-  titleField: string | null;
-  onInputChange: (fieldId: string, value: any) => void;
+  value: any;
+  onChange: (fieldId: string, value: any) => void;
+  errors?: Record<string, string[]>;
 }
 
-export function FieldRenderer({ field, formData, titleField, onInputChange }: FieldRendererProps) {
-  const commonProps = {
-    id: field.api_id,
-    label: field.name,
-    value: formData[field.api_id],
-    onChange: (value: any) => onInputChange(field.api_id, value),
-    required: field.required || false,
-    helpText: field.helpText || null,
-    className: "mb-5",
-  };
-
-  const applyAppearanceStyles = (element: JSX.Element) => {
-    if (!field.appearance) return element;
-    
-    const appearance = field.appearance;
-    const customStyle: React.CSSProperties = {};
-    const customClass = appearance.customClass || '';
-    
-    if (appearance.colors) {
-      if (appearance.colors.background) customStyle.backgroundColor = appearance.colors.background;
-      if (appearance.colors.border) customStyle.borderColor = appearance.colors.border;
-      if (appearance.colors.text) customStyle.color = appearance.colors.text;
-    }
-    
-    if (appearance.showBorder === false) {
-      customStyle.border = 'none';
-    }
-    
-    if (appearance.roundedCorners) {
-      switch(appearance.roundedCorners) {
-        case 'none': customStyle.borderRadius = '0'; break;
-        case 'small': customStyle.borderRadius = '0.25rem'; break;
-        case 'medium': customStyle.borderRadius = '0.375rem'; break;
-        case 'large': customStyle.borderRadius = '0.5rem'; break;
-      }
-    }
-    
-    if (appearance.textAlign) {
-      switch(appearance.textAlign) {
-        case 'left': customStyle.textAlign = 'left'; break;
-        case 'center': customStyle.textAlign = 'center'; break;
-        case 'right': customStyle.textAlign = 'right'; break;
-        case 'justify': customStyle.textAlign = 'justify'; break;
-        default: break;
-      }
-    }
-    
-    if (appearance.customCss) {
-      try {
-        const cssEntries = appearance.customCss.split(';')
-          .filter((entry: string) => entry.trim() !== '')
-          .map((entry: string) => {
-            const [prop, value] = entry.split(':').map((part: string) => part.trim());
-            const camelProp = prop.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
-            return [camelProp, value];
-          });
-          
-        cssEntries.forEach(([prop, value]: [string, string]) => {
-          if (prop && value) {
-            const safeValue = value;
-            (customStyle as any)[prop] = safeValue;
-          }
-        });
-      } catch (error) {
-        console.error('Error parsing custom CSS:', error);
-      }
-    }
-    
-    return React.cloneElement(element, {
-      style: { ...element.props.style, ...customStyle },
-      className: cn(element.props.className, customClass)
-    });
-  };
-
+export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererProps) => {
+  const fieldId = field.id || field.apiId || field.name;
+  const fieldName = field.name || "Field";
+  const placeholder = field.ui_options?.placeholder || `Enter ${fieldName}...`;
+  const helpText = field.helpText || field.ui_options?.help_text;
+  const required = field.required || false;
+  const hasError = errors && errors[fieldId]?.length > 0;
+  const errorMessage = errors && errors[fieldId]?.join(", ");
+  
+  // Extract appearance settings
+  const appearance = field.appearance || {};
+  const {
+    textAlign,
+    labelPosition,
+    labelWidth,
+    floatLabel,
+    filled,
+    showBorder,
+    showBackground,
+    roundedCorners,
+    fieldSize,
+    labelSize,
+    uiVariant,
+    customClass,
+    colors = {}
+  } = appearance;
+  
+  // Extract advanced settings
+  const advanced = field.advanced || {};
+  
+  // Create a className that includes any error styling
+  const fieldClassName = cn(
+    customClass || "",
+    "w-full",
+    hasError && "has-error"
+  );
+  
   switch (field.type) {
-    case 'text':
-      return applyAppearanceStyles(
+    case "text":
+      return (
         <InputTextField
-          {...commonProps}
-          placeholder={field.placeholder || `Enter ${field.name}`}
-          keyFilter={field.keyFilter || "none"}
-          floatLabel={field.appearance?.floatLabel}
-          filled={field.appearance?.filled}
-          textAlign={field.appearance?.textAlign}
-          labelPosition={field.appearance?.labelPosition}
-          labelWidth={field.appearance?.labelWidth}
-          showBorder={field.appearance?.showBorder}
-          roundedCorners={field.appearance?.roundedCorners}
-          fieldSize={field.appearance?.fieldSize}
-          labelSize={field.appearance?.labelSize}
-          customClass={field.appearance?.customClass}
-          colors={field.appearance?.colors}
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          keyFilter={advanced.keyFilter || "none"}
+          floatLabel={floatLabel || false}
+          filled={filled || false}
+          textAlign={textAlign || "left"}
+          labelPosition={labelPosition || "top"}
+          labelWidth={labelWidth || 30}
+          showBorder={showBorder !== false}
+          roundedCorners={roundedCorners || "medium"}
+          fieldSize={fieldSize || "medium"}
+          labelSize={labelSize || "medium"}
+          customClass={fieldClassName}
+          colors={colors}
         />
       );
-    case 'textarea':
-      return (
-        <div className="mb-5">
-          <Label htmlFor={field.api_id}>{field.name}{field.required && <span className="text-red-500 ml-1">*</span>}</Label>
-          <Textarea
-            id={field.api_id}
-            value={formData[field.api_id] || ''}
-            onChange={(e) => onInputChange(field.api_id, e.target.value)}
-            placeholder={field.placeholder || `Enter ${field.name}`}
-            required={field.required}
-            className="mt-1"
-            rows={5}
-          />
-          {field.helpText && (
-            <p className="text-muted-foreground text-xs mt-1">{field.helpText}</p>
-          )}
-        </div>
-      );
-    case 'number':
+
+    case "number":
       return (
         <NumberInputField
-          {...commonProps}
+          id={fieldId}
+          label={fieldName}
+          value={value || 0}
+          onChange={(newValue) => onChange(fieldId, newValue)}
           min={field.min}
           max={field.max}
-          placeholder={field.placeholder || `Enter a number`}
-          floatLabel={field.appearance?.floatLabel}
-          filled={field.appearance?.filled}
-          showButtons={field.advanced?.showButtons}
-          buttonLayout={field.advanced?.buttonLayout || "horizontal"}
-          prefix={field.advanced?.prefix}
-          suffix={field.advanced?.suffix}
-          colors={field.appearance?.colors}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          floatLabel={floatLabel || false}
+          filled={filled || false}
+          showButtons={advanced.showButtons || false}
+          buttonLayout={advanced.buttonLayout || "horizontal"}
+          prefix={advanced.prefix || ""}
+          suffix={advanced.suffix || ""}
+          textAlign={textAlign || "left"}
+          labelPosition={labelPosition || "top"}
+          labelWidth={labelWidth || 30}
+          showBorder={showBorder !== false}
+          roundedCorners={roundedCorners || "medium"}
+          fieldSize={fieldSize || "medium"}
+          labelSize={labelSize || "medium"}
+          customClass={fieldClassName}
+          colors={colors}
         />
       );
-    case 'boolean':
-    case 'toggle':
-      return (
-        <div key={field.id} className="flex items-center space-x-2 mb-5">
-          <Switch
-            id={field.api_id}
-            checked={formData[field.api_id] || false}
-            onCheckedChange={(checked) => onInputChange(field.api_id, checked)}
-          />
-          <Label htmlFor={field.api_id}>{field.name}{field.required && <span className="text-red-500 ml-1">*</span>}</Label>
-        </div>
-      );
-    case 'select':
-      return (
-        <div className="mb-5">
-          <Label htmlFor={field.api_id}>{field.name}{field.required && <span className="text-red-500 ml-1">*</span>}</Label>
-          <Select 
-            onValueChange={(value) => onInputChange(field.api_id, value)}
-            defaultValue={formData[field.api_id] || ''}
-          >
-            <SelectTrigger id={field.api_id} className="mt-1">
-              <SelectValue placeholder={`Select ${field.name}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options &&
-                field.options.map((option: any) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-          {field.helpText && (
-            <p className="text-muted-foreground text-xs mt-1">{field.helpText}</p>
-          )}
-        </div>
-      );
-    case 'selectbutton':
-      return (
-        <SelectButtonField
-          {...commonProps}
-          options={field.options}
-          value={formData[field.api_id] || ''}
-        />
-      );
-    case 'date':
-      return (
-        <DateCalendarField
-          {...commonProps}
-          value={formData[field.api_id] || null}
-          onChange={(date: Date) => {
-            onInputChange(field.api_id, date);
-          }}
-        />
-      );
-    case 'password':
+
+    case "password":
       return (
         <PasswordInputField
-          {...commonProps}
-          placeholder={field.placeholder || `Enter password`}
-          floatLabel={field.appearance?.floatLabel}
-          filled={field.appearance?.filled}
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          showToggle={advanced.showToggle || true}
+          floatLabel={floatLabel || false}
+          filled={filled || false}
+          textAlign={textAlign || "left"}
+          labelPosition={labelPosition || "top"}
+          labelWidth={labelWidth || 30}
+          showBorder={showBorder !== false}
+          roundedCorners={roundedCorners || "medium"}
+          fieldSize={fieldSize || "medium"}
+          labelSize={labelSize || "medium"}
+          customClass={fieldClassName}
+          colors={colors}
         />
       );
-    case 'mask':
+
+    case "textarea":
       return (
-        <MaskInputField
-          {...commonProps}
-          placeholder={field.placeholder || `Enter value`}
-          mask={field.mask || ''}
-          floatLabel={field.appearance?.floatLabel}
-          filled={field.appearance?.filled}
+        <TextareaField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          rows={field.rows || 3}
+          floatLabel={floatLabel || false}
+          filled={filled || false}
+          textAlign={textAlign || "left"}
+          labelPosition={labelPosition || "top"}
+          labelWidth={labelWidth || 30}
+          showBorder={showBorder !== false}
+          roundedCorners={roundedCorners || "medium"}
+          fieldSize={fieldSize || "medium"}
+          labelSize={labelSize || "medium"}
+          customClass={fieldClassName}
+          colors={colors}
         />
       );
-    case 'otp':
-      return (
-        <OTPInputField
-          {...commonProps}
-          length={field.length || 6}
-        />
-      );
-    case 'autocomplete':
-      return (
-        <AutocompleteInputField
-          {...commonProps}
-          placeholder={field.placeholder || `Type to search...`}
-          options={field.options || []}
-          floatLabel={field.appearance?.floatLabel}
-          filled={field.appearance?.filled}
-        />
-      );
-    case 'blockeditor':
-      return (
-        <BlockEditorField
-          {...commonProps}
-          placeholder={field.placeholder || `Enter content...`}
-          minHeight={field.minHeight || '200px'}
-        />
-      );
-    case 'wysiwyg':
-      return (
-        <WysiwygEditorField
-          {...commonProps}
-          placeholder={field.placeholder || `Enter content...`}
-          minHeight={field.minHeight || '200px'}
-        />
-      );
-    case 'markdown':
+
+    case "markdown":
       return (
         <MarkdownEditorField
-          {...commonProps}
-          placeholder={field.placeholder || `Enter markdown content...`}
-          rows={field.rows || 10}
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          rows={field.rows || 3}
+          customClass={fieldClassName}
         />
       );
-    case 'tags':
+
+    case "wysiwyg":
       return (
-        <TagsInputField
-          {...commonProps}
-          value={formData[field.api_id] || []}
-          placeholder={field.placeholder || `Add tags...`}
-          maxTags={field.maxTags || 10}
+        <WysiwygEditorField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          minHeight={field.minHeight || "200px"}
+          customClass={fieldClassName}
         />
       );
-    case 'slug':
+
+    case "blockeditor":
       return (
-        <SlugInputField
-          {...commonProps}
-          placeholder={field.placeholder || `url-friendly-slug`}
-          sourceValue={titleField ? formData[titleField] : ''}
-          prefix={field.prefix || ''}
-          suffix={field.suffix || ''}
+        <BlockEditorField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          minHeight={field.minHeight || "200px"}
+          customClass={fieldClassName}
         />
       );
-    case 'color':
-    case 'colorpicker':
+
+    case "file":
+      return (
+        <FileUploadField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "image":
+      return (
+        <ImageUploadField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "date":
+      return (
+        <DatePickerField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "select":
+      return (
+        <SelectField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          options={field.options || []}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "multiselect":
+      return (
+        <MultiSelectField
+          id={fieldId}
+          label={fieldName}
+          value={value || []}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          options={field.options || []}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "toggle":
+      return (
+        <ToggleField
+          id={fieldId}
+          label={fieldName}
+          value={value || false}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "checkbox":
+      return (
+        <CheckboxGroupField
+          id={fieldId}
+          label={fieldName}
+          value={value || []}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          options={field.options || []}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "radio":
+      return (
+        <RadioGroupField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          options={field.options || []}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "color":
       return (
         <ColorPickerField
-          {...commonProps}
-          placeholder={field.placeholder || `Select color`}
-          showAlpha={field.advanced?.showAlpha}
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
         />
       );
-    case 'radioCards':
+
+    case "slug":
       return (
-        <RadioCardsField
-          {...commonProps}
+        <SlugInputField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          prefix={field.prefix || ""}
+          suffix={field.suffix || ""}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "tags":
+      return (
+        <TagsInputField
+          id={fieldId}
+          label={fieldName}
+          value={value || []}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          maxTags={field.maxTags || 10}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "mask":
+      return (
+        <MaskInputField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
+          mask={field.mask || ""}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "otp":
+      return (
+        <OTPInputField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          length={field.length || 6}
+          helpText={hasError ? errorMessage : helpText}
+          customClass={fieldClassName}
+        />
+      );
+
+    case "autocomplete":
+      return (
+        <AutocompleteInputField
+          id={fieldId}
+          label={fieldName}
+          value={value || ""}
+          onChange={(newValue) => onChange(fieldId, newValue)}
+          placeholder={placeholder}
+          required={required}
+          helpText={hasError ? errorMessage : helpText}
           options={field.options || []}
+          customClass={fieldClassName}
         />
       );
-    case 'checkboxCards':
-      return (
-        <CheckboxCardsField
-          {...commonProps}
-          value={formData[field.api_id] || []}
-          options={field.options || []}
-          maxSelections={field.maxSelections}
-        />
-      );
-    case 'file':
-      return (
-        <FileInputField
-          {...commonProps}
-          value={formData[field.api_id] || null}
-          accept={field.accept}
-          maxSize={field.maxSize || 10}
-          showPreview={field.showPreview !== false}
-        />
-      );
-    case 'files':
-      return (
-        <MultiFileInputField
-          {...commonProps}
-          value={formData[field.api_id] || []}
-          accept={field.accept}
-          maxSize={field.maxSize || 10}
-          maxFiles={field.maxFiles || 5}
-          showPreviews={field.showPreviews !== false}
-        />
-      );
-    case 'json':
-      return (
-        <JSONEditorField
-          {...commonProps}
-          value={formData[field.api_id] || {}}
-          rows={field.rows || 10}
-        />
-      );
-    case 'rating':
-      return (
-        <RatingField
-          {...commonProps}
-          value={formData[field.api_id] || 0}
-          maxRating={field.maxRating || 5}
-          allowHalf={field.allowHalf}
-          size={field.size || 'md'}
-        />
-      );
-    case 'slider':
-      return (
-        <SliderField
-          {...commonProps}
-          value={formData[field.api_id] || 0}
-          min={field.min || 0}
-          max={field.max || 100}
-          step={field.step || 1}
-          showInput={field.showInput !== false}
-          showMarks={field.advanced?.showMarks}
-          markStep={field.advanced?.markStep}
-        />
-      );
-    case 'hash':
-      return (
-        <HashInputField
-          {...commonProps}
-          placeholder={field.placeholder || `Enter hash value`}
-        />
-      );
-      
-    case 'icon':
-      return (
-        <IconSelectField
-          {...commonProps}
-        />
-      );
-      
-    case 'listbox':
-      return (
-        <ListboxField
-          {...commonProps}
-          placeholder={field.placeholder || `Select an option`}
-          options={field.options || []}
-        />
-      );
-      
-    case 'treeView':
-      return (
-        <TreeViewField
-          {...commonProps}
-          items={field.items || []}
-          selectedIds={formData[field.api_id] || []}
-          multiSelect={field.multiSelect !== false}
-        />
-      );
-      
-    case 'inlineRepeater':
-      return (
-        <InlineRepeaterField
-          {...commonProps}
-          fields={field.fields || []}
-          value={formData[field.api_id] || []}
-          addButtonText={field.addButtonText || "Add Item"}
-          initialItemData={field.initialItemData || {}}
-        />
-      );
-      
-    case 'divider':
-      return (
-        <DividerField
-          id={field.api_id}
-          label={field.name}
-          className="mb-5"
-          color={field.color || 'muted'}
-          thickness={field.thickness || 1}
-          style={field.style || 'solid'}
-        />
-      );
-      
-    case 'superHeader':
-      return (
-        <SuperHeaderField
-          id={field.api_id}
-          text={field.name}
-          className="mb-5"
-          size={field.size || 'lg'}
-          color={field.color || 'default'}
-          align={field.align || 'left'}
-          hasDivider={field.hasDivider || false}
-        />
-      );
-      
-    case 'detailGroup':
-      return (
-        <DetailGroupField
-          id={field.api_id}
-          title={field.name}
-          description={field.description}
-          items={field.items || []}
-          className="mb-5"
-          maxHeight={field.maxHeight}
-          bordered={field.bordered !== false}
-          labelWidth={field.labelWidth || 'auto'}
-        />
-      );
-      
-    case 'rawGroup':
-      return (
-        <RawGroupField
-          id={field.api_id}
-          className="mb-5"
-        >
-          {field.children}
-        </RawGroupField>
-      );
-      
-    case 'collectionItem':
-      return (
-        <CollectionItemField
-          {...commonProps}
-          collection={field.collection || ''}
-          placeholder={field.placeholder || `Select item`}
-          multiple={field.multiple || false}
-          displayField={field.displayField || 'title'}
-          searchFields={field.searchFields || ['title']}
-          items={field.items || []}
-        />
-      );
-      
+
     default:
-      return <div key={field.id}>Unknown field type: {field.type}</div>;
+      return (
+        <div>
+          <p className="text-sm text-gray-500">Field type '{field.type}' not supported in preview</p>
+        </div>
+      );
   }
-}
+};
+
+export default FieldRenderer;

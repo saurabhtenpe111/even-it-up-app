@@ -1,4 +1,3 @@
-
 import { CollectionCard } from './CollectionCard';
 import { CollectionListItem } from './CollectionListItem';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -21,10 +20,10 @@ export function CollectionGrid({ collections, viewMode, sortOption, onCreateNew,
     if (sortOption === 'alphabetical') {
       return a.title.localeCompare(b.title);
     } else if (sortOption === 'oldest') {
-      return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      return new Date(a.createdAt || a.created_at || 0).getTime() - new Date(b.createdAt || b.created_at || 0).getTime();
     } else {
       // Default to 'latest'
-      return new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
+      return new Date(b.updatedAt || b.updated_at || 0).getTime() - new Date(a.updatedAt || a.updated_at || 0).getTime();
     }
   });
 
@@ -122,9 +121,9 @@ export function CollectionGrid({ collections, viewMode, sortOption, onCreateNew,
               title={collection.title}
               icon={collection.icon}
               iconColor={collection.iconColor}
-              fields={collection.fields || 0}
+              fields={collection.fields?.length || 0}
               items={collection.items || 0}
-              lastUpdated={collection.lastUpdated || collection.updated_at}
+              lastUpdated={collection.lastUpdated || collection.updatedAt || collection.updated_at}
               status={(collection.status as "published" | "draft") || "draft"}
             />
           ))}
@@ -142,9 +141,9 @@ export function CollectionGrid({ collections, viewMode, sortOption, onCreateNew,
           title={collection.title}
           icon={collection.icon}
           iconColor={collection.iconColor}
-          fields={collection.fields || 0}
+          fields={collection.fields?.length || 0}
           items={collection.items || 0}
-          lastUpdated={collection.lastUpdated || collection.updated_at}
+          lastUpdated={collection.lastUpdated || collection.updatedAt || collection.updated_at}
           status={(collection.status as "published" | "draft") || "draft"}
         />
       ))}

@@ -7,7 +7,13 @@ import React from 'react';
  * @returns A function that handles React.ChangeEvent and passes the value to the setter
  */
 export function adaptInputChangeEvent(setter: (value: string) => void) {
-  return (e: React.ChangeEvent<HTMLInputElement>) => {
-    setter(e.target.value);
+  return (value: string | React.ChangeEvent<HTMLInputElement>) => {
+    if (typeof value === 'string') {
+      // If the value is already a string (from a component that processes the event)
+      setter(value);
+    } else {
+      // If the value is a ChangeEvent (from a native input)
+      setter(value.target.value);
+    }
   };
 }

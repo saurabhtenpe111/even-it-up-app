@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Check, Circle, Mail, XIcon } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { InputTextField } from '@/components/fields/inputs/InputTextField';
 import { toast } from '@/hooks/use-toast';
 import { adaptInputChangeEvent } from '@/utils/inputAdapters';

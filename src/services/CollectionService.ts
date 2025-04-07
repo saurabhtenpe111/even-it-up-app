@@ -22,6 +22,14 @@ export interface Collection {
   fields?: any[];
   createdAt: string;
   updatedAt: string;
+  // Add the missing fields
+  icon?: string;
+  iconColor?: string;
+  items?: number;
+  lastUpdated?: string;
+  // Legacy field names
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CollectionFormData {
@@ -65,7 +73,14 @@ export const CollectionService = {
         status: 'published',
         fields: [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        icon: 'file-text',
+        iconColor: 'blue',
+        items: 5,
+        lastUpdated: new Date().toISOString(),
+        // Legacy field names for compatibility
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       },
       {
         id: 'col2',
@@ -75,7 +90,14 @@ export const CollectionService = {
         status: 'published',
         fields: [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        icon: 'shopping-bag',
+        iconColor: 'green',
+        items: 12,
+        lastUpdated: new Date().toISOString(),
+        // Legacy field names for compatibility
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
     ]);
   },
@@ -90,7 +112,14 @@ export const CollectionService = {
       status: collectionData.status || 'draft',
       fields: [],
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      icon: 'file',
+      iconColor: 'gray',
+      items: 0,
+      lastUpdated: new Date().toISOString(),
+      // Legacy field names for compatibility
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
   },
 

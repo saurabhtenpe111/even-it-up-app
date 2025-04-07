@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CollectionService } from '@/services/CollectionService';
+import { CollectionService, ValidationSettings } from '@/services/CollectionService';
 import { FieldConfigPanel } from '@/components/fields/FieldConfigPanel';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@/components/ui/breadcrumb';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { FieldTypeSelector } from '@/components/fields/FieldTypeSelector';
@@ -13,8 +13,42 @@ import { CollectionPreviewForm } from '@/components/collection-preview/Collectio
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { FieldList } from '@/components/fields/FieldList';
-import { FileJson, Settings2, View } from 'lucide-react';
+import { 
+  FileJson, 
+  Settings2, 
+  View, 
+  ArrowLeft, 
+  Eye, 
+  Save, 
+  Plus, 
+  Trash2,
+  FileType,
+  X
+} from 'lucide-react';
 import { FieldAppearancePanel } from '@/components/fields/appearance/FieldAppearancePanel';
+import { FieldValidationPanel } from '@/components/fields/FieldValidationPanel';
+import { FieldAdvancedPanel } from '@/components/fields/FieldAdvancedPanel';
+import { FieldLayoutPanel } from '@/components/fields/FieldLayoutPanel';
+import { Button } from '@/components/ui/button';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from '@/components/ui/dialog';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { JSONEditorField } from '@/components/fields/inputs/JSONEditorField';
+import { ComponentSelector } from '@/components/fields/ComponentSelector';
 
 const fieldTypes = {
   'Text & Numbers': [

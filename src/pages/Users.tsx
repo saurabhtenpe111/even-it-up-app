@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,13 @@ export default function Users() {
   const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [bio, setBio] = useState('');
+  
+  const handleUpdateProfile = () => {
+    toast({
+      title: "Profile updated",
+      description: "Your profile has been updated successfully",
+    });
+  };
 
   return (
     <MainLayout>
@@ -65,7 +73,7 @@ export default function Users() {
             />
           </CardContent>
           <CardFooter className="flex justify-end items-center">
-            <Button>
+            <Button onClick={handleUpdateProfile}>
               Update Profile
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Plus, Minus } from "lucide-react";
 
 export interface NumberInputFieldProps {
-  id: string;
+  id?: string;
   value: number;
   onChange: (value: number) => void;
   label?: string;
@@ -38,10 +37,15 @@ export interface NumberInputFieldProps {
     focus?: string;
     label?: string;
   };
+  locale?: string;
+  currency?: string;
+  invalid?: boolean;
+  disabled?: boolean;
+  "aria-label"?: string;
 }
 
 export const NumberInputField = ({
-  id,
+  id = `number-${Math.random().toString(36).substring(2, 9)}`,
   value,
   onChange,
   label,
@@ -65,12 +69,16 @@ export const NumberInputField = ({
   fieldSize = "medium",
   labelSize = "medium",
   customClass = "",
-  colors = {}
+  colors = {},
+  locale,
+  currency,
+  invalid = false,
+  disabled = false,
+  "aria-label": ariaLabel
 }: NumberInputFieldProps) => {
   const [hasFocus, setHasFocus] = useState(false);
   const [localValue, setLocalValue] = useState<string>(value?.toString() || "");
 
-  // Generate dynamic styles based on props
   const inputContainerStyle: React.CSSProperties = {
     display: labelPosition === "left" ? "flex" : "block",
     alignItems: "center",
@@ -85,7 +93,6 @@ export const NumberInputField = ({
     marginBottom: labelPosition === "top" ? "0.5rem" : "0"
   };
 
-  // Get border radius based on roundedCorners prop
   const getBorderRadius = () => {
     switch (roundedCorners) {
       case "none": return "0";
@@ -96,7 +103,6 @@ export const NumberInputField = ({
     }
   };
 
-  // Get padding based on fieldSize prop
   const getPadding = () => {
     switch (fieldSize) {
       case "small": return "0.375rem 0.5rem";
@@ -106,10 +112,28 @@ export const NumberInputField = ({
     }
   };
 
+  const formatValue = (value: number): string => {
+    if (locale) {
+      try {
+        if (currency) {
+          return new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency: currency
+          }).format(value);
+        }
+        return new Intl.NumberFormat(locale).format(value);
+      } catch (e) {
+        console.warn(`Error formatting number with locale ${locale}:`, e);
+        return value.toString();
+      }
+    }
+    return value.toString();
+  };
+
   const inputStyle: React.CSSProperties = {
     width: labelPosition === "left" ? `${100 - labelWidth}%` : "100%",
     backgroundColor: filled ? (colors.background || "#f1f5f9") : "transparent",
-    border: showBorder ? `1px solid ${colors.border || "#e2e8f0"}` : "none",
+    border: showBorder ? `1px solid ${invalid ? "#dc2626" : (colors.border || "#e2e8f0")}` : "none",
     borderRadius: getBorderRadius(),
     padding: getPadding(),
     fontSize: fieldSize === "small" ? "0.875rem" : fieldSize === "medium" ? "1rem" : "1.125rem",
@@ -136,16 +160,19 @@ export const NumberInputField = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     
-    // Allow empty or minus sign for now
     if (inputValue === "" || inputValue === "-") {
       setLocalValue(inputValue);
       return;
     }
     
-    const numberValue = Number(inputValue);
+    let cleanValue = inputValue;
+    if (locale) {
+      cleanValue = cleanValue.replace(/[^0-9.-]/g, '');
+    }
+    
+    const numberValue = Number(cleanValue);
     
     if (!isNaN(numberValue)) {
-      // Check min/max constraints
       if ((min === undefined || numberValue >= min) && 
           (max === undefined || numberValue <= max)) {
         setLocalValue(inputValue);
@@ -163,7 +190,6 @@ export const NumberInputField = ({
   const handleBlur = () => {
     setHasFocus(false);
     
-    // If empty, set to min or 0
     if (localValue === "" || localValue === "-") {
       const defaultValue = min !== undefined ? min : 0;
       setLocalValue(defaultValue.toString());
@@ -211,7 +237,7 @@ export const NumberInputField = ({
             variant="outline"
             size="icon"
             onClick={handleDecrement}
-            disabled={min !== undefined && value <= min}
+            disabled={disabled || (min !== undefined && value <= min)}
             className="h-8 w-8"
           >
             <Minus className="h-3 w-3" />
@@ -232,9 +258,8 @@ export const NumberInputField = ({
             onFocus={() => setHasFocus(true)}
             onBlur={handleBlur}
             placeholder={floatLabel && label ? "" : placeholder}
-            min={min}
-            max={max}
-            step={step}
+            disabled={disabled}
+            aria-label={ariaLabel || label}
             required={required}
             style={{
               ...inputStyle,
@@ -243,7 +268,9 @@ export const NumberInputField = ({
             }}
             className={cn(
               "focus:ring-1 focus:ring-offset-0",
-              hasFocus && "outline-none"
+              hasFocus && "outline-none",
+              invalid && "border-red-500 focus:ring-red-500",
+              disabled && "opacity-50 cursor-not-allowed"
             )}
           />
           {suffix && (
@@ -259,7 +286,7 @@ export const NumberInputField = ({
             variant="outline"
             size="icon"
             onClick={handleIncrement}
-            disabled={max !== undefined && value >= max}
+            disabled={disabled || (max !== undefined && value >= max)}
             className="h-8 w-8"
           >
             <Plus className="h-3 w-3" />
@@ -273,7 +300,7 @@ export const NumberInputField = ({
               variant="outline"
               size="icon"
               onClick={handleDecrement}
-              disabled={min !== undefined && value <= min}
+              disabled={disabled || (min !== undefined && value <= min)}
               className="h-8 w-8 rounded-r-none"
             >
               <Minus className="h-3 w-3" />
@@ -283,7 +310,7 @@ export const NumberInputField = ({
               variant="outline"
               size="icon"
               onClick={handleIncrement}
-              disabled={max !== undefined && value >= max}
+              disabled={disabled || (max !== undefined && value >= max)}
               className="h-8 w-8 rounded-l-none"
             >
               <Plus className="h-3 w-3" />
@@ -292,7 +319,7 @@ export const NumberInputField = ({
         )}
       </div>
       {helpText && (
-        <p className="text-sm text-gray-500">{helpText}</p>
+        <p className={cn("text-sm", invalid ? "text-red-500" : "text-gray-500")}>{helpText}</p>
       )}
     </div>
   );

@@ -264,6 +264,7 @@ export function FieldConfigPanel({
     const fieldName = form.watch('name') || "Field Label";
     const placeholder = form.watch('ui_options.placeholder') || "Enter value...";
     const helpText = form.watch('helpText');
+    const defaultValue = form.watch('defaultValue') || '';
 
     switch (fieldType) {
       case 'text':
@@ -278,6 +279,8 @@ export function FieldConfigPanel({
               keyFilter={form.watch('keyFilter') || "none"}
               floatLabel={appearanceSettings?.floatLabel || false}
               filled={appearanceSettings?.filled || false}
+              value={defaultValue}
+              onChange={() => {}} // Preview only, no changes needed
             />
           </div>
         );

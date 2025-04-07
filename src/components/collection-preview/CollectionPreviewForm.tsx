@@ -140,8 +140,9 @@ export function CollectionPreviewForm({
                   key={field.id}
                   field={field}
                   formData={formData}
-                  titleField={titleField}
+                  titleField={titleField || ""}
                   onInputChange={handleInputChange}
+                  errors={{}}
                 />
               ))}
             </div>

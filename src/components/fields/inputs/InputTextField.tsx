@@ -122,6 +122,11 @@ export const InputTextField = ({
     }
   };
 
+  // This function handles the onChange event from the Input component
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
     <div className={cn("space-y-2", customClass)} style={inputContainerStyle}>
       {label && !floatLabel && (
@@ -158,7 +163,7 @@ export const InputTextField = ({
         <Input
           id={id}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleInputChange}
           placeholder={floatLabel && label ? "" : placeholder}
           onFocus={() => setHasFocus(true)}
           onBlur={() => setHasFocus(false)}

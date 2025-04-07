@@ -1,19 +1,20 @@
+
 import React from "react";
 import InputTextField from "../fields/inputs/InputTextField";
 import PasswordInputField from "../fields/inputs/PasswordInputField";
 import NumberInputField from "../fields/inputs/NumberInputField";
-import TextareaField from "../fields/inputs/TextareaField";
+import { Textarea } from "@/components/ui/textarea";
 import MarkdownEditorField from "../fields/inputs/MarkdownEditorField";
 import WysiwygEditorField from "../fields/inputs/WysiwygEditorField";
 import BlockEditorField from "../fields/inputs/BlockEditorField";
-import FileUploadField from "../fields/inputs/FileUploadField";
-import ImageUploadField from "../fields/inputs/ImageUploadField";
-import DatePickerField from "../fields/inputs/DatePickerField";
-import SelectField from "../fields/inputs/SelectField";
-import MultiSelectField from "../fields/inputs/MultiSelectField";
-import ToggleField from "../fields/inputs/ToggleField";
-import CheckboxGroupField from "../fields/inputs/CheckboxGroupField";
-import RadioGroupField from "../fields/inputs/RadioGroupField";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import ColorPickerField from "../fields/inputs/ColorPickerField";
 import SlugInputField from "../fields/inputs/SlugInputField";
 import TagsInputField from "../fields/inputs/TagsInputField";
@@ -22,16 +23,18 @@ import OTPInputField from "../fields/inputs/OTPInputField";
 import AutocompleteInputField from "../fields/inputs/AutocompleteInputField";
 import { cn } from "@/lib/utils";
 
-interface FieldRendererProps {
+export interface FieldRendererProps {
   field: any;
-  value: any;
-  onChange: (fieldId: string, value: any) => void;
+  formData: Record<string, any>;
+  titleField?: string | null;
+  onInputChange: (fieldId: string, value: any) => void;
   errors?: Record<string, string[]>;
 }
 
-export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererProps) => {
+export const FieldRenderer = ({ field, formData, titleField, onInputChange, errors }: FieldRendererProps) => {
   const fieldId = field.id || field.apiId || field.name;
   const fieldName = field.name || "Field";
+  const value = formData?.[fieldId] !== undefined ? formData[fieldId] : "";
   const placeholder = field.ui_options?.placeholder || `Enter ${fieldName}...`;
   const helpText = field.helpText || field.ui_options?.help_text;
   const required = field.required || false;
@@ -73,7 +76,7 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
@@ -98,7 +101,7 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || 0}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           min={field.min}
           max={field.max}
           placeholder={placeholder}
@@ -128,11 +131,10 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          showToggle={advanced.showToggle || true}
           floatLabel={floatLabel || false}
           filled={filled || false}
           textAlign={textAlign || "left"}
@@ -149,27 +151,22 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
 
     case "textarea":
       return (
-        <TextareaField
-          id={fieldId}
-          label={fieldName}
-          value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          placeholder={placeholder}
-          required={required}
-          helpText={hasError ? errorMessage : helpText}
-          rows={field.rows || 3}
-          floatLabel={floatLabel || false}
-          filled={filled || false}
-          textAlign={textAlign || "left"}
-          labelPosition={labelPosition || "top"}
-          labelWidth={labelWidth || 30}
-          showBorder={showBorder !== false}
-          roundedCorners={roundedCorners || "medium"}
-          fieldSize={fieldSize || "medium"}
-          labelSize={labelSize || "medium"}
-          customClass={fieldClassName}
-          colors={colors}
-        />
+        <div className={fieldClassName}>
+          <Label htmlFor={fieldId}>{fieldName}</Label>
+          <Textarea
+            id={fieldId}
+            value={value || ""}
+            onChange={(e) => onInputChange(fieldId, e.target.value)}
+            placeholder={placeholder}
+            required={required}
+            rows={field.rows || 3}
+          />
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "markdown":
@@ -178,12 +175,11 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
           rows={field.rows || 3}
-          customClass={fieldClassName}
         />
       );
 
@@ -193,12 +189,11 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
           minHeight={field.minHeight || "200px"}
-          customClass={fieldClassName}
         />
       );
 
@@ -208,123 +203,201 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
           minHeight={field.minHeight || "200px"}
-          customClass={fieldClassName}
         />
       );
 
     case "file":
       return (
-        <FileUploadField
-          id={fieldId}
-          label={fieldName}
-          value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          placeholder={placeholder}
-          required={required}
-          helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <Label htmlFor={fieldId}>{fieldName}</Label>
+          <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md border-gray-300 bg-gray-50 mt-2">
+            <Button variant="outline" type="button" onClick={() => console.log("File upload clicked")}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload file
+            </Button>
+            <p className="mt-2 text-xs text-gray-500">Drag and drop or click to upload</p>
+          </div>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "image":
       return (
-        <ImageUploadField
-          id={fieldId}
-          label={fieldName}
-          value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          placeholder={placeholder}
-          required={required}
-          helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <Label htmlFor={fieldId}>{fieldName}</Label>
+          <div className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-md border-gray-300 bg-gray-50 mt-2">
+            <Button variant="outline" type="button" onClick={() => console.log("Image upload clicked")}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload image
+            </Button>
+            <p className="mt-2 text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+          </div>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "date":
       return (
-        <DatePickerField
-          id={fieldId}
-          label={fieldName}
-          value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          placeholder={placeholder}
-          required={required}
-          helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <Label htmlFor={fieldId}>{fieldName}</Label>
+          <div className="border rounded-md p-1 mt-2">
+            <Calendar
+              mode="single"
+              selected={value ? new Date(value) : undefined}
+              onSelect={(date) => onInputChange(fieldId, date?.toISOString() || "")}
+            />
+          </div>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "select":
       return (
-        <SelectField
-          id={fieldId}
-          label={fieldName}
-          value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          placeholder={placeholder}
-          required={required}
-          helpText={hasError ? errorMessage : helpText}
-          options={field.options || []}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <Label htmlFor={fieldId}>{fieldName}</Label>
+          <Select
+            value={value || ""}
+            onValueChange={(newValue) => onInputChange(fieldId, newValue)}
+          >
+            {field.options?.map((option: any) => (
+              <option key={option.value || option} value={option.value || option}>
+                {option.label || option}
+              </option>
+            ))}
+          </Select>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "multiselect":
       return (
-        <MultiSelectField
-          id={fieldId}
-          label={fieldName}
-          value={value || []}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          placeholder={placeholder}
-          required={required}
-          helpText={hasError ? errorMessage : helpText}
-          options={field.options || []}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <Label htmlFor={fieldId}>{fieldName}</Label>
+          <Select
+            multiple
+            value={value || []}
+            onValueChange={(newValue) => onInputChange(fieldId, newValue)}
+          >
+            {field.options?.map((option: any) => (
+              <option key={option.value || option} value={option.value || option}>
+                {option.label || option}
+              </option>
+            ))}
+          </Select>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "toggle":
       return (
-        <ToggleField
-          id={fieldId}
-          label={fieldName}
-          value={value || false}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={fieldId}
+              checked={!!value}
+              onCheckedChange={(checked) => onInputChange(fieldId, checked)}
+            />
+            <Label htmlFor={fieldId}>{fieldName}</Label>
+          </div>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "checkbox":
       return (
-        <CheckboxGroupField
-          id={fieldId}
-          label={fieldName}
-          value={value || []}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          options={field.options || []}
-          helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <Label className="mb-2 block">{fieldName}</Label>
+          <div className="space-y-2">
+            {field.options?.map((option: any) => {
+              const optionValue = option.value || option;
+              const optionLabel = option.label || option;
+              const isChecked = Array.isArray(value) ? value.includes(optionValue) : false;
+              
+              return (
+                <div key={optionValue} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${fieldId}-${optionValue}`}
+                    checked={isChecked}
+                    onCheckedChange={(checked) => {
+                      let newValue = [...(Array.isArray(value) ? value : [])];
+                      if (checked) {
+                        if (!newValue.includes(optionValue)) {
+                          newValue.push(optionValue);
+                        }
+                      } else {
+                        newValue = newValue.filter((v) => v !== optionValue);
+                      }
+                      onInputChange(fieldId, newValue);
+                    }}
+                  />
+                  <Label htmlFor={`${fieldId}-${optionValue}`}>{optionLabel}</Label>
+                </div>
+              );
+            })}
+          </div>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "radio":
       return (
-        <RadioGroupField
-          id={fieldId}
-          label={fieldName}
-          value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
-          options={field.options || []}
-          helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
-        />
+        <div className={fieldClassName}>
+          <Label className="mb-2 block">{fieldName}</Label>
+          <RadioGroup
+            value={value || ""}
+            onValueChange={(newValue) => onInputChange(fieldId, newValue)}
+          >
+            {field.options?.map((option: any) => {
+              const optionValue = option.value || option;
+              const optionLabel = option.label || option;
+              
+              return (
+                <div key={optionValue} className="flex items-center space-x-2">
+                  <RadioGroupItem value={optionValue} id={`${fieldId}-${optionValue}`} />
+                  <Label htmlFor={`${fieldId}-${optionValue}`}>{optionLabel}</Label>
+                </div>
+              );
+            })}
+          </RadioGroup>
+          {(helpText || hasError) && (
+            <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
+              {hasError ? errorMessage : helpText}
+            </p>
+          )}
+        </div>
       );
 
     case "color":
@@ -333,9 +406,8 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
         />
       );
 
@@ -345,13 +417,12 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
           prefix={field.prefix || ""}
           suffix={field.suffix || ""}
-          customClass={fieldClassName}
         />
       );
 
@@ -361,12 +432,11 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || []}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
           maxTags={field.maxTags || 10}
-          customClass={fieldClassName}
         />
       );
 
@@ -376,12 +446,11 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
           mask={field.mask || ""}
-          customClass={fieldClassName}
         />
       );
 
@@ -391,10 +460,9 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           length={field.length || 6}
           helpText={hasError ? errorMessage : helpText}
-          customClass={fieldClassName}
         />
       );
 
@@ -404,12 +472,11 @@ export const FieldRenderer = ({ field, value, onChange, errors }: FieldRendererP
           id={fieldId}
           label={fieldName}
           value={value || ""}
-          onChange={(newValue) => onChange(fieldId, newValue)}
+          onChange={(newValue) => onInputChange(fieldId, newValue)}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
           options={field.options || []}
-          customClass={fieldClassName}
         />
       );
 

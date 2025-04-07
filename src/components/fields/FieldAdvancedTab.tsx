@@ -27,9 +27,10 @@ export function FieldAdvancedTab({ fieldType, fieldData, onUpdate }: FieldAdvanc
   // Handle saving advanced settings
   const handleSaveAdvancedSettings = (advancedSettings: any) => {
     setIsSaving(true);
-    setAdvancedSettings(advancedSettings);
     
     try {
+      setAdvancedSettings(advancedSettings);
+      
       // Merge with existing field data if needed
       const updatedData = {
         ...(fieldData || {}),

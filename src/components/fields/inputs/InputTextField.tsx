@@ -11,6 +11,7 @@ export interface InputTextFieldProps {
   label?: string;
   placeholder?: string;
   helpText?: string;
+  errorMessage?: string; // Added for error message support
   required?: boolean;
   keyFilter?: "none" | "letters" | "numbers" | "alphanumeric";
   floatLabel?: boolean;
@@ -31,6 +32,10 @@ export interface InputTextFieldProps {
     focus?: string;
     label?: string;
   };
+  // Add additional props that are being used
+  disabled?: boolean;
+  invalid?: boolean;
+  size?: string; // Accept string for size
 }
 
 export const InputTextField = ({
@@ -40,6 +45,7 @@ export const InputTextField = ({
   label,
   placeholder,
   helpText,
+  errorMessage,
   required = false,
   keyFilter = "none",
   floatLabel = false,
@@ -52,9 +58,15 @@ export const InputTextField = ({
   fieldSize = "medium",
   labelSize = "medium",
   customClass = "",
+  disabled = false,
+  invalid = false,
+  size,
   colors = {}
 }: InputTextFieldProps) => {
   const [hasFocus, setHasFocus] = useState(false);
+  
+  // Use size prop if provided (for backwards compatibility)
+  const effectiveFieldSize = size || fieldSize;
   
   // Generate dynamic styles based on props
   const inputContainerStyle: React.CSSProperties = {
@@ -67,7 +79,7 @@ export const InputTextField = ({
     width: labelPosition === "left" ? `${labelWidth}%` : "auto",
     fontSize: labelSize === "small" ? "0.875rem" : labelSize === "medium" ? "1rem" : "1.125rem",
     fontWeight: labelSize === "large" ? 600 : 500,
-    color: colors.label || "#64748b",
+    color: colors.label || (invalid ? "#dc2626" : "#64748b"),
     marginBottom: labelPosition === "top" ? "0.5rem" : "0"
   };
   
@@ -84,7 +96,7 @@ export const InputTextField = ({
   
   // Get padding based on fieldSize prop
   const getPadding = () => {
-    switch (fieldSize) {
+    switch (effectiveFieldSize) {
       case "small": return "0.375rem 0.5rem";
       case "medium": return "0.5rem 0.75rem";
       case "large": return "0.75rem 1rem";
@@ -95,10 +107,10 @@ export const InputTextField = ({
   const inputStyle: React.CSSProperties = {
     width: labelPosition === "left" ? `${100 - labelWidth}%` : "100%",
     backgroundColor: filled ? (colors.background || "#f1f5f9") : "transparent",
-    border: showBorder ? `1px solid ${colors.border || "#e2e8f0"}` : "none",
+    border: showBorder ? `1px solid ${colors.border || (invalid ? "#dc2626" : "#e2e8f0")}` : "none",
     borderRadius: getBorderRadius(),
     padding: getPadding(),
-    fontSize: fieldSize === "small" ? "0.875rem" : fieldSize === "medium" ? "1rem" : "1.125rem",
+    fontSize: effectiveFieldSize === "small" ? "0.875rem" : effectiveFieldSize === "medium" ? "1rem" : "1.125rem",
     textAlign: textAlign,
     color: colors.text || "#1e293b",
   };
@@ -169,15 +181,19 @@ export const InputTextField = ({
           onBlur={() => setHasFocus(false)}
           onKeyDown={handleKeyPress}
           required={required}
+          disabled={disabled}
           style={inputStyle}
           className={cn(
             "focus:ring-1 focus:ring-offset-0",
-            hasFocus && "outline-none"
+            hasFocus && "outline-none",
+            invalid && "border-red-500 focus:ring-red-500"
           )}
         />
       </div>
-      {helpText && (
-        <p className="text-sm text-gray-500">{helpText}</p>
+      {(helpText || errorMessage) && (
+        <p className={cn("text-sm", invalid || errorMessage ? "text-red-500" : "text-gray-500")}>
+          {errorMessage || helpText}
+        </p>
       )}
     </div>
   );

@@ -11,7 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
-import { Select } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -180,6 +186,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           required={required}
           helpText={hasError ? errorMessage : helpText}
           rows={field.rows || 3}
+          className={fieldClassName}
         />
       );
 
@@ -194,6 +201,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           required={required}
           helpText={hasError ? errorMessage : helpText}
           minHeight={field.minHeight || "200px"}
+          className={fieldClassName}
         />
       );
 
@@ -208,6 +216,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           required={required}
           helpText={hasError ? errorMessage : helpText}
           minHeight={field.minHeight || "200px"}
+          className={fieldClassName}
         />
       );
 
@@ -276,11 +285,16 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
             value={value || ""}
             onValueChange={(newValue) => onInputChange(fieldId, newValue)}
           >
-            {field.options?.map((option: any) => (
-              <option key={option.value || option} value={option.value || option}>
-                {option.label || option}
-              </option>
-            ))}
+            <SelectTrigger>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option: any) => (
+                <SelectItem key={option.value || option} value={option.value || option}>
+                  {option.label || option}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           {(helpText || hasError) && (
             <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
@@ -294,17 +308,34 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
       return (
         <div className={fieldClassName}>
           <Label htmlFor={fieldId}>{fieldName}</Label>
-          <Select
-            multiple
-            value={value || []}
-            onValueChange={(newValue) => onInputChange(fieldId, newValue)}
-          >
-            {field.options?.map((option: any) => (
-              <option key={option.value || option} value={option.value || option}>
-                {option.label || option}
-              </option>
-            ))}
-          </Select>
+          <div className="border rounded-md p-3 mt-2 max-h-60 overflow-y-auto">
+            {field.options?.map((option: any) => {
+              const optionValue = option.value || option;
+              const optionLabel = option.label || option;
+              const isSelected = Array.isArray(value) && value.includes(optionValue);
+              
+              return (
+                <div key={optionValue} className="flex items-center space-x-2 py-1">
+                  <Checkbox
+                    id={`${fieldId}-${optionValue}`}
+                    checked={isSelected}
+                    onCheckedChange={(checked) => {
+                      let newValue = [...(Array.isArray(value) ? value : [])];
+                      if (checked) {
+                        if (!newValue.includes(optionValue)) {
+                          newValue.push(optionValue);
+                        }
+                      } else {
+                        newValue = newValue.filter((v) => v !== optionValue);
+                      }
+                      onInputChange(fieldId, newValue);
+                    }}
+                  />
+                  <Label htmlFor={`${fieldId}-${optionValue}`}>{optionLabel}</Label>
+                </div>
+              );
+            })}
+          </div>
           {(helpText || hasError) && (
             <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
               {hasError ? errorMessage : helpText}
@@ -408,6 +439,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           value={value || ""}
           onChange={(newValue) => onInputChange(fieldId, newValue)}
           helpText={hasError ? errorMessage : helpText}
+          className={fieldClassName}
         />
       );
 
@@ -423,6 +455,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           helpText={hasError ? errorMessage : helpText}
           prefix={field.prefix || ""}
           suffix={field.suffix || ""}
+          className={fieldClassName}
         />
       );
 
@@ -437,6 +470,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           required={required}
           helpText={hasError ? errorMessage : helpText}
           maxTags={field.maxTags || 10}
+          className={fieldClassName}
         />
       );
 
@@ -451,6 +485,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           required={required}
           helpText={hasError ? errorMessage : helpText}
           mask={field.mask || ""}
+          className={fieldClassName}
         />
       );
 
@@ -463,6 +498,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           onChange={(newValue) => onInputChange(fieldId, newValue)}
           length={field.length || 6}
           helpText={hasError ? errorMessage : helpText}
+          className={fieldClassName}
         />
       );
 
@@ -477,6 +513,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           required={required}
           helpText={hasError ? errorMessage : helpText}
           options={field.options || []}
+          className={fieldClassName}
         />
       );
 

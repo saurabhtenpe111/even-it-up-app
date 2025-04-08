@@ -21,47 +21,15 @@ export function adaptCollectionFormData(values: any): any {
 }
 
 export function adaptNumberFieldSettings(settings: any): any {
+  // Use helper functions for cleaner and more standardized access
   const adaptedSettings: any = {};
 
-  if (settings.min !== undefined) {
-    adaptedSettings.min = settings.min;
-  }
-  if (settings.max !== undefined) {
-    adaptedSettings.max = settings.max;
-  }
-  if (settings.step !== undefined) {
-    adaptedSettings.step = settings.step;
-  }
-  if (settings.defaultValue !== undefined) {
-    adaptedSettings.defaultValue = settings.defaultValue;
-  }
-  if (settings.prefix !== undefined) {
-    adaptedSettings.prefix = settings.prefix;
-  }
-  if (settings.suffix !== undefined) {
-    adaptedSettings.suffix = settings.suffix;
-  }
-  if (settings.locale !== undefined) {
-    adaptedSettings.locale = settings.locale;
-  }
-  if (settings.currency !== undefined) {
-    adaptedSettings.currency = settings.currency;
-  }
-  if (settings.showButtons !== undefined) {
-    adaptedSettings.showButtons = settings.showButtons;
-  }
-  if (settings.buttonLayout !== undefined) {
-    adaptedSettings.buttonLayout = settings.buttonLayout;
-  }
-  if (settings.floatLabel !== undefined) {
-    adaptedSettings.floatLabel = settings.floatLabel;
-  }
-  if (settings.filled !== undefined) {
-    adaptedSettings.filled = settings.filled;
-  }
-  if (settings.accessibilityLabel !== undefined) {
-    adaptedSettings.accessibilityLabel = settings.accessibilityLabel;
-  }
+  // Only include settings that are defined
+  Object.entries(settings).forEach(([key, value]) => {
+    if (value !== undefined) {
+      adaptedSettings[key] = value;
+    }
+  });
 
   return adaptedSettings;
 }

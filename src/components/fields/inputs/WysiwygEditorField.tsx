@@ -41,7 +41,7 @@ export function WysiwygEditorField({
   onValidationChange
 }: WysiwygEditorFieldProps) {
   // Local state to track validation
-  const [isValid, setIsValid] = useState(true);
+  const [isValid, setIsValid] = useState(!required || (value && value.trim().length > 0));
   
   // Validate UI variant
   const validUIVariant = validateUIVariant(uiVariant);
@@ -67,14 +67,16 @@ export function WysiwygEditorField({
     // If required, check if there's content
     const currentIsValid = !required || (value && value.trim().length > 0);
     
-    // Update local state
-    setIsValid(currentIsValid);
-    
-    // Notify parent component if callback provided
-    if (onValidationChange) {
-      onValidationChange(currentIsValid);
+    // Update local state only if changed
+    if (isValid !== currentIsValid) {
+      setIsValid(currentIsValid);
+      
+      // Notify parent component if callback provided
+      if (onValidationChange) {
+        onValidationChange(currentIsValid);
+      }
     }
-  }, [value, required, onValidationChange]);
+  }, [value, required, onValidationChange, isValid]);
 
   // Handle content change
   const handleContentChange = (newContent: string) => {
@@ -82,10 +84,14 @@ export function WysiwygEditorField({
     
     // Immediate validation
     const contentIsValid = !required || (newContent && newContent.trim().length > 0);
-    setIsValid(contentIsValid);
     
-    if (onValidationChange) {
-      onValidationChange(contentIsValid);
+    // Only update and notify if changed
+    if (isValid !== contentIsValid) {
+      setIsValid(contentIsValid);
+      
+      if (onValidationChange) {
+        onValidationChange(contentIsValid);
+      }
     }
   };
 

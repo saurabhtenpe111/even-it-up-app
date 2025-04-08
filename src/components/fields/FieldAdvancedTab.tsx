@@ -20,22 +20,27 @@ export function FieldAdvancedTab({
   fieldData, 
   onUpdate 
 }: FieldAdvancedTabProps) {
-  const [advancedSettings, setAdvancedSettings] = useState<any>(
-    fieldData?.advanced || (fieldData?.settings?.advanced || {})
-  );
+  const [advancedSettings, setAdvancedSettings] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingToDb, setIsSavingToDb] = useState(false);
 
   // Update local state when fieldData changes
   useEffect(() => {
-    if (fieldData?.advanced) {
-      setAdvancedSettings(fieldData.advanced);
-    } else if (fieldData?.settings?.advanced) {
-      setAdvancedSettings(fieldData.settings.advanced);
+    // Try to get advanced settings from different possible paths
+    let settings;
+    if (fieldData?.settings?.advanced) {
+      settings = fieldData.settings.advanced;
+      console.log("[FieldAdvancedTab] Found advanced settings in fieldData.settings.advanced:", settings);
+    } else if (fieldData?.advanced) {
+      settings = fieldData.advanced;
+      console.log("[FieldAdvancedTab] Found advanced settings in fieldData.advanced:", settings);
     } else {
-      setAdvancedSettings({});
+      settings = {};
+      console.log("[FieldAdvancedTab] No advanced settings found, using empty object");
     }
+    
+    setAdvancedSettings(settings);
   }, [fieldData]);
 
   // Handle saving advanced settings locally
@@ -51,11 +56,12 @@ export function FieldAdvancedTab({
       // Create a deep copy of the existing field data to work with
       const updatedData = fieldData ? JSON.parse(JSON.stringify(fieldData)) : {};
       
-      // Set the advanced settings
+      // Ensure settings object exists
       if (!updatedData.settings) {
         updatedData.settings = {};
       }
       
+      // Set the advanced settings at the correct path
       updatedData.settings.advanced = advancedSettings;
       
       // Log the complete updated field data
@@ -100,7 +106,7 @@ export function FieldAdvancedTab({
       console.log("[FieldAdvancedTab] Field ID:", fieldId);
       console.log("[FieldAdvancedTab] Collection ID:", collectionId);
       
-      // Create the field data object to update
+      // Create the field data object to update with proper structure
       const fieldUpdateData = {
         settings: {
           advanced: advancedSettings
@@ -115,20 +121,21 @@ export function FieldAdvancedTab({
       // Update local state with the response from the database
       if (updatedField?.settings?.advanced) {
         setAdvancedSettings(updatedField.settings.advanced);
+        
+        // Create a deep copy of the existing field data to work with
+        const updatedData = fieldData ? JSON.parse(JSON.stringify(fieldData)) : {};
+        
+        // Ensure settings object exists
+        if (!updatedData.settings) {
+          updatedData.settings = {};
+        }
+        
+        // Update the advanced settings in the local state
+        updatedData.settings.advanced = updatedField.settings.advanced;
+        
+        // Update the field data with our deep-copied and merged object
+        onUpdate(updatedData);
       }
-      
-      // Create a deep copy of the existing field data to work with
-      const updatedData = fieldData ? JSON.parse(JSON.stringify(fieldData)) : {};
-      
-      // Set the advanced settings in the local state too
-      if (!updatedData.settings) {
-        updatedData.settings = {};
-      }
-      
-      updatedData.settings.advanced = advancedSettings;
-      
-      // Update the field data with our deep-copied and merged object
-      onUpdate(updatedData);
       
       toast({
         title: "Advanced settings saved to database",

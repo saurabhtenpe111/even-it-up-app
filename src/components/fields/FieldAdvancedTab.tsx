@@ -4,6 +4,12 @@ import { FieldAdvancedPanel } from "./FieldAdvancedPanel";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { updateField } from "@/services/CollectionService";
+import { 
+  getAdvancedSettings,
+  createUpdatePayload,
+  updateFieldSettings,
+  AdvancedSettings
+} from "@/utils/fieldSettingsHelpers";
 
 interface FieldAdvancedTabProps {
   fieldType: string | null;
@@ -20,54 +26,40 @@ export function FieldAdvancedTab({
   fieldData, 
   onUpdate 
 }: FieldAdvancedTabProps) {
-  const [advancedSettings, setAdvancedSettings] = useState<any>({});
+  const [advancedSettings, setAdvancedSettings] = useState<AdvancedSettings>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingToDb, setIsSavingToDb] = useState(false);
 
-  // Update local state when fieldData changes
+  // Update local state when fieldData changes using our helper
   useEffect(() => {
-    // Try to get advanced settings from different possible paths
-    let settings;
-    if (fieldData?.settings?.advanced) {
-      settings = fieldData.settings.advanced;
-      console.log("[FieldAdvancedTab] Found advanced settings in fieldData.settings.advanced:", settings);
-    } else if (fieldData?.advanced) {
-      settings = fieldData.advanced;
-      console.log("[FieldAdvancedTab] Found advanced settings in fieldData.advanced:", settings);
+    if (fieldData) {
+      const settings = getAdvancedSettings(fieldData);
+      console.log("[FieldAdvancedTab] Extracted advanced settings:", settings);
+      setAdvancedSettings(settings);
     } else {
-      settings = {};
-      console.log("[FieldAdvancedTab] No advanced settings found, using empty object");
+      setAdvancedSettings({});
     }
-    
-    setAdvancedSettings(settings);
   }, [fieldData]);
 
   // Handle saving advanced settings locally
-  const handleLocalSave = (advancedSettings: any) => {
+  const handleLocalSave = (advancedSettings: AdvancedSettings) => {
     setIsSaving(true);
     
     try {
       // Log the advanced settings being saved
-      console.log("[FieldAdvancedTab] Saving advanced settings locally:", JSON.stringify(advancedSettings, null, 2));
+      console.log("[FieldAdvancedTab] Saving advanced settings locally:", 
+        JSON.stringify(advancedSettings, null, 2));
       
       setAdvancedSettings(advancedSettings);
       
-      // Create a deep copy of the existing field data to work with
-      const updatedData = fieldData ? JSON.parse(JSON.stringify(fieldData)) : {};
-      
-      // Ensure settings object exists
-      if (!updatedData.settings) {
-        updatedData.settings = {};
-      }
-      
-      // Set the advanced settings at the correct path
-      updatedData.settings.advanced = advancedSettings;
+      // Use the helper to update field settings
+      const updatedData = updateFieldSettings(fieldData, 'advanced', advancedSettings);
       
       // Log the complete updated field data
-      console.log("[FieldAdvancedTab] Complete updated field data:", JSON.stringify(updatedData, null, 2));
+      console.log("[FieldAdvancedTab] Complete updated field data:", 
+        JSON.stringify(updatedData, null, 2));
       
-      // Update the field data with our deep-copied and merged object
       onUpdate(updatedData);
       
       toast({
@@ -87,7 +79,7 @@ export function FieldAdvancedTab({
   };
 
   // Handle saving advanced settings to the database
-  const handleDatabaseSave = async (advancedSettings: any) => {
+  const handleDatabaseSave = async (advancedSettings: AdvancedSettings) => {
     // Check if we have the required IDs to save to database
     if (!fieldId || !collectionId) {
       toast({
@@ -102,16 +94,13 @@ export function FieldAdvancedTab({
     
     try {
       // Log the advanced settings being saved to database
-      console.log("[FieldAdvancedTab] Saving advanced settings to database:", JSON.stringify(advancedSettings, null, 2));
+      console.log("[FieldAdvancedTab] Saving advanced settings to database:", 
+        JSON.stringify(advancedSettings, null, 2));
       console.log("[FieldAdvancedTab] Field ID:", fieldId);
       console.log("[FieldAdvancedTab] Collection ID:", collectionId);
       
-      // Create the field data object to update with proper structure
-      const fieldUpdateData = {
-        settings: {
-          advanced: advancedSettings
-        }
-      };
+      // Create the field data object using our helper
+      const fieldUpdateData = createUpdatePayload('advanced', advancedSettings);
       
       // Call the service to update the field in the database
       const updatedField = await updateField(collectionId, fieldId, fieldUpdateData);
@@ -119,21 +108,9 @@ export function FieldAdvancedTab({
       console.log("[FieldAdvancedTab] Field updated in database:", updatedField);
       
       // Update local state with the response from the database
-      if (updatedField?.settings?.advanced) {
-        setAdvancedSettings(updatedField.settings.advanced);
-        
-        // Create a deep copy of the existing field data to work with
-        const updatedData = fieldData ? JSON.parse(JSON.stringify(fieldData)) : {};
-        
-        // Ensure settings object exists
-        if (!updatedData.settings) {
-          updatedData.settings = {};
-        }
-        
-        // Update the advanced settings in the local state
-        updatedData.settings.advanced = updatedField.settings.advanced;
-        
-        // Update the field data with our deep-copied and merged object
+      if (updatedField) {
+        const updatedData = updateFieldSettings(fieldData, 'advanced', 
+          updatedField.settings?.advanced || advancedSettings);
         onUpdate(updatedData);
       }
       
@@ -154,7 +131,7 @@ export function FieldAdvancedTab({
   };
 
   // Unified save handler that checks if we can save to database
-  const handleSaveAdvancedSettings = async (advancedSettings: any) => {
+  const handleSaveAdvancedSettings = async (advancedSettings: AdvancedSettings) => {
     // Always save locally first
     handleLocalSave(advancedSettings);
     

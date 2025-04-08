@@ -1,8 +1,7 @@
-
 import React from "react";
-import InputTextField from "../fields/inputs/InputTextField";
-import PasswordInputField from "../fields/inputs/PasswordInputField";
-import NumberInputField from "../fields/inputs/NumberInputField";
+import { InputTextField } from "../fields/inputs/InputTextField";
+import { PasswordInputField } from "../fields/inputs/PasswordInputField";
+import { NumberInputField } from "../fields/inputs/NumberInputField";
 import { Textarea } from "@/components/ui/textarea";
 import MarkdownEditorField from "../fields/inputs/MarkdownEditorField";
 import WysiwygEditorField from "../fields/inputs/WysiwygEditorField";
@@ -11,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
-import { 
-  Select, 
-  SelectContent, 
+import {
+  Select,
+  SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
@@ -28,6 +27,7 @@ import MaskInputField from "../fields/inputs/MaskInputField";
 import OTPInputField from "../fields/inputs/OTPInputField";
 import AutocompleteInputField from "../fields/inputs/AutocompleteInputField";
 import { cn } from "@/lib/utils";
+import { validateUIVariant } from "@/utils/inputAdapters";
 
 export interface FieldRendererProps {
   field: any;
@@ -41,40 +41,101 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
   const fieldId = field.id || field.apiId || field.name;
   const fieldName = field.name || "Field";
   const value = formData?.[fieldId] !== undefined ? formData[fieldId] : "";
-  const placeholder = field.ui_options?.placeholder || `Enter ${fieldName}...`;
+  
+  const placeholder = field.placeholder || field.ui_options?.placeholder || `Enter ${fieldName}...`;
   const helpText = field.helpText || field.ui_options?.help_text;
   const required = field.required || false;
   const hasError = errors && errors[fieldId]?.length > 0;
   const errorMessage = errors && errors[fieldId]?.join(", ");
+
+  let appearance = field.appearance || {};
+  console.log(`Rendering field ${fieldName} with appearance:`, JSON.stringify(appearance, null, 2));
+
+  const uiVariant = validateUIVariant(appearance.uiVariant);
+  console.log(`UI Variant for field ${fieldName} in FieldRenderer:`, uiVariant);
   
-  // Extract appearance settings
-  const appearance = field.appearance || {};
+  appearance = {
+    ...appearance,
+    uiVariant
+  };
+  
   const {
-    textAlign,
-    labelPosition,
-    labelWidth,
-    floatLabel,
-    filled,
-    showBorder,
-    showBackground,
-    roundedCorners,
-    fieldSize,
-    labelSize,
-    uiVariant,
-    customClass,
+    textAlign = "left",
+    labelPosition = "top",
+    labelWidth = 30,
+    floatLabel = false,
+    filled = false,
+    showBorder = true,
+    showBackground = false,
+    roundedCorners = "medium",
+    fieldSize = "medium",
+    labelSize = "medium",
+    customClass = "",
     colors = {}
   } = appearance;
-  
-  // Extract advanced settings
+
   const advanced = field.advanced || {};
-  
-  // Create a className that includes any error styling
+
   const fieldClassName = cn(
-    customClass || "",
+    customClass,
     "w-full",
-    hasError && "has-error"
+    hasError && "has-error",
+    `ui-variant-${uiVariant}`
   );
-  
+
+  const getFieldSpecificProps = () => {
+    switch (field.type) {
+      case "number":
+        return {
+          min: field.min !== undefined ? field.min : (field.validation?.min !== undefined ? field.validation.min : undefined),
+          max: field.max !== undefined ? field.max : (field.validation?.max !== undefined ? field.validation.max : undefined),
+          step: field.step || advanced.step || 1,
+          prefix: advanced.prefix || field.prefix || "",
+          suffix: advanced.suffix || field.suffix || "",
+          showButtons: advanced.showButtons || false,
+          buttonLayout: advanced.buttonLayout || "horizontal",
+          currency: advanced.currency || field.currency || "USD",
+          locale: advanced.locale || field.locale || "en-US"
+        };
+      case "mask":
+        return {
+          mask: advanced.mask || field.mask || ""
+        };
+      case "tags":
+        return {
+          maxTags: advanced.maxTags || field.maxTags || 10
+        };
+      case "slug":
+        return {
+          prefix: advanced.prefix || field.prefix || "",
+          suffix: advanced.suffix || field.suffix || ""
+        };
+      case "otp":
+        return {
+          length: advanced.length || field.length || 6
+        };
+      case "textarea":
+        return {
+          rows: advanced.rows || field.rows || 3
+        };
+      case "markdown":
+      case "wysiwyg":
+      case "blockeditor":
+        return {
+          minHeight: advanced.minHeight || field.minHeight || "200px",
+          rows: advanced.rows || field.rows || 10
+        };
+      case "color":
+        return {
+          showAlpha: advanced.showAlpha || field.showAlpha || false
+        };
+      default:
+        return {};
+    }
+  };
+
+  const fieldSpecificProps = getFieldSpecificProps();
+
   switch (field.type) {
     case "text":
       return (
@@ -87,17 +148,20 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           required={required}
           helpText={hasError ? errorMessage : helpText}
           keyFilter={advanced.keyFilter || "none"}
-          floatLabel={floatLabel || false}
-          filled={filled || false}
-          textAlign={textAlign || "left"}
-          labelPosition={labelPosition || "top"}
-          labelWidth={labelWidth || 30}
-          showBorder={showBorder !== false}
-          roundedCorners={roundedCorners || "medium"}
-          fieldSize={fieldSize || "medium"}
-          labelSize={labelSize || "medium"}
+          floatLabel={floatLabel}
+          filled={filled}
+          textAlign={textAlign}
+          labelPosition={labelPosition}
+          labelWidth={labelWidth}
+          showBorder={showBorder}
+          roundedCorners={roundedCorners}
+          fieldSize={fieldSize}
+          labelSize={labelSize}
           customClass={fieldClassName}
           colors={colors}
+          uiVariant={uiVariant as "standard" | "material" | "pill" | "borderless" | "underlined"}
+          errorMessage={hasError ? errorMessage : undefined}
+          invalid={hasError}
         />
       );
 
@@ -106,28 +170,31 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
         <NumberInputField
           id={fieldId}
           label={fieldName}
-          value={value || 0}
+          value={value !== undefined && value !== "" ? value : null}
           onChange={(newValue) => onInputChange(fieldId, newValue)}
-          min={field.min}
-          max={field.max}
+          min={fieldSpecificProps.min}
+          max={fieldSpecificProps.max}
+          step={fieldSpecificProps.step}
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          floatLabel={floatLabel || false}
-          filled={filled || false}
-          showButtons={advanced.showButtons || false}
-          buttonLayout={advanced.buttonLayout || "horizontal"}
-          prefix={advanced.prefix || ""}
-          suffix={advanced.suffix || ""}
-          textAlign={textAlign || "left"}
-          labelPosition={labelPosition || "top"}
-          labelWidth={labelWidth || 30}
-          showBorder={showBorder !== false}
-          roundedCorners={roundedCorners || "medium"}
-          fieldSize={fieldSize || "medium"}
-          labelSize={labelSize || "medium"}
+          floatLabel={floatLabel}
+          filled={filled}
+          showButtons={fieldSpecificProps.showButtons}
+          buttonLayout={fieldSpecificProps.buttonLayout}
+          prefix={fieldSpecificProps.prefix}
+          suffix={fieldSpecificProps.suffix}
+          textAlign={textAlign}
+          labelPosition={labelPosition}
+          labelWidth={labelWidth}
+          showBorder={showBorder}
+          roundedCorners={roundedCorners}
+          fieldSize={fieldSize}
+          labelSize={labelSize}
           customClass={fieldClassName}
           colors={colors}
+          uiVariant={uiVariant as "standard" | "material" | "pill" | "borderless" | "underlined"}
+          invalid={hasError}
         />
       );
 
@@ -141,17 +208,20 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          floatLabel={floatLabel || false}
-          filled={filled || false}
-          textAlign={textAlign || "left"}
-          labelPosition={labelPosition || "top"}
-          labelWidth={labelWidth || 30}
-          showBorder={showBorder !== false}
-          roundedCorners={roundedCorners || "medium"}
-          fieldSize={fieldSize || "medium"}
-          labelSize={labelSize || "medium"}
+          floatLabel={floatLabel}
+          filled={filled}
+          textAlign={textAlign}
+          labelPosition={labelPosition}
+          labelWidth={labelWidth}
+          showBorder={showBorder}
+          roundedCorners={roundedCorners}
+          fieldSize={fieldSize}
+          labelSize={labelSize}
           customClass={fieldClassName}
           colors={colors}
+          uiVariant={uiVariant as "standard" | "material" | "pill" | "borderless" | "underlined"}
+          errorMessage={hasError ? errorMessage : undefined}
+          invalid={hasError}
         />
       );
 
@@ -165,7 +235,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
             onChange={(e) => onInputChange(fieldId, e.target.value)}
             placeholder={placeholder}
             required={required}
-            rows={field.rows || 3}
+            rows={fieldSpecificProps.rows}
           />
           {(helpText || hasError) && (
             <p className={cn("text-sm mt-1", hasError ? "text-destructive" : "text-gray-500")}>
@@ -185,7 +255,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          rows={field.rows || 3}
+          rows={fieldSpecificProps.rows}
           className={fieldClassName}
         />
       );
@@ -200,8 +270,12 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          minHeight={field.minHeight || "200px"}
+          minHeight={fieldSpecificProps.minHeight}
           className={fieldClassName}
+          uiVariant={uiVariant as "standard" | "material" | "pill" | "borderless" | "underlined"}
+          colors={colors}
+          errorMessage={hasError ? errorMessage : undefined}
+          invalid={hasError}
         />
       );
 
@@ -215,7 +289,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          minHeight={field.minHeight || "200px"}
+          minHeight={fieldSpecificProps.minHeight}
           className={fieldClassName}
         />
       );
@@ -313,7 +387,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
               const optionValue = option.value || option;
               const optionLabel = option.label || option;
               const isSelected = Array.isArray(value) && value.includes(optionValue);
-              
+
               return (
                 <div key={optionValue} className="flex items-center space-x-2 py-1">
                   <Checkbox
@@ -372,7 +446,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
               const optionValue = option.value || option;
               const optionLabel = option.label || option;
               const isChecked = Array.isArray(value) ? value.includes(optionValue) : false;
-              
+
               return (
                 <div key={optionValue} className="flex items-center space-x-2">
                   <Checkbox
@@ -414,7 +488,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
             {field.options?.map((option: any) => {
               const optionValue = option.value || option;
               const optionLabel = option.label || option;
-              
+
               return (
                 <div key={optionValue} className="flex items-center space-x-2">
                   <RadioGroupItem value={optionValue} id={`${fieldId}-${optionValue}`} />
@@ -440,6 +514,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           onChange={(newValue) => onInputChange(fieldId, newValue)}
           helpText={hasError ? errorMessage : helpText}
           className={fieldClassName}
+          showAlpha={fieldSpecificProps.showAlpha}
         />
       );
 
@@ -453,8 +528,8 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          prefix={field.prefix || ""}
-          suffix={field.suffix || ""}
+          prefix={fieldSpecificProps.prefix}
+          suffix={fieldSpecificProps.suffix}
           className={fieldClassName}
         />
       );
@@ -469,7 +544,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          maxTags={field.maxTags || 10}
+          maxTags={fieldSpecificProps.maxTags}
           className={fieldClassName}
         />
       );
@@ -484,7 +559,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           placeholder={placeholder}
           required={required}
           helpText={hasError ? errorMessage : helpText}
-          mask={field.mask || ""}
+          mask={fieldSpecificProps.mask}
           className={fieldClassName}
         />
       );
@@ -496,7 +571,7 @@ export const FieldRenderer = ({ field, formData, titleField, onInputChange, erro
           label={fieldName}
           value={value || ""}
           onChange={(newValue) => onInputChange(fieldId, newValue)}
-          length={field.length || 6}
+          length={fieldSpecificProps.length}
           helpText={hasError ? errorMessage : helpText}
           className={fieldClassName}
         />

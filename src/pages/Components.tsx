@@ -1,219 +1,150 @@
 
+import React, { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { ComponentsPanel } from '@/components/components/ComponentsPanel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FieldLayoutPanel } from '@/components/fields/FieldLayoutPanel';
-import { useState } from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
-import { NumberInputField } from '@/components/fields/inputs/NumberInputField';
+import { ComponentsPanel } from '@/components/ComponentsPanel';
+import { fetchCollections, createField, updateField } from '@/services/CollectionService';
+import { Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
-export default function Components() {
-  const [activeTab, setActiveTab] = useState('components');
-  const [numberValue, setNumberValue] = useState<number | null>(1000);
+const ComponentsPage: React.FC = () => {
+  const [collections, setCollections] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    const loadCollections = async () => {
+      try {
+        setIsLoading(true);
+        const collectionsData = await fetchCollections();
+        setCollections(collectionsData);
+      } catch (error) {
+        console.error("Error loading collections:", error);
+        toast({
+          title: "Error loading collections",
+          description: "There was a problem retrieving your collections.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCollections();
+  }, []);
+
+  // Function to create a new field
+  const handleCreateField = async (collectionId: string, fieldData: any) => {
+    try {
+      setIsUpdating(true);
+      console.log("Creating new field with data:", fieldData);
+      
+      // Call the service to create a new field
+      const newField = await createField(collectionId, fieldData);
+      
+      console.log("New field created:", newField);
+      
+      // Update the collections list to include the new field
+      setCollections(prevCollections => {
+        return prevCollections.map(collection => {
+          if (collection.id === collectionId) {
+            return {
+              ...collection,
+              fields: [...(collection.fields || []), newField]
+            };
+          }
+          return collection;
+        });
+      });
+
+      toast({
+        title: "Field created",
+        description: `Field "${fieldData.name}" has been created successfully.`
+      });
+      
+      return newField;
+    } catch (error) {
+      console.error("Error creating field:", error);
+      toast({
+        title: "Error creating field",
+        description: "There was a problem creating the field.",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Function to update an existing field
+  const handleUpdateField = async (collectionId: string, fieldId: string, fieldData: any) => {
+    try {
+      setIsUpdating(true);
+      console.log("Updating field with data:", fieldData);
+      console.log("Field ID:", fieldId);
+      console.log("Collection ID:", collectionId);
+      
+      // Call the service to update the field
+      const updatedField = await updateField(collectionId, fieldId, fieldData);
+      
+      console.log("Field updated:", updatedField);
+      
+      // Update the collections list with the updated field
+      setCollections(prevCollections => {
+        return prevCollections.map(collection => {
+          if (collection.id === collectionId) {
+            const updatedFields = (collection.fields || []).map(field => {
+              if (field.id === fieldId) {
+                return updatedField;
+              }
+              return field;
+            });
+            
+            return {
+              ...collection,
+              fields: updatedFields
+            };
+          }
+          return collection;
+        });
+      });
+
+      toast({
+        title: "Field updated",
+        description: `Field "${updatedField.name}" has been updated successfully.`
+      });
+      
+      return updatedField;
+    } catch (error) {
+      console.error("Error updating field:", error);
+      toast({
+        title: "Error updating field",
+        description: "There was a problem updating the field.",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <MainLayout>
       <div className="p-6 md:p-10">
-        <h1 className="text-2xl font-bold mb-6">Components</h1>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="components">UI Components</TabsTrigger>
-            <TabsTrigger value="fields">Field Types</TabsTrigger>
-            <TabsTrigger value="number">Number Input</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="components">
-            <Card className="border-gray-100">
-              <CardContent className="p-6">
-                <ComponentsPanel />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="fields">
-            <Card className="border-gray-100">
-              <CardContent className="p-6">
-                <FieldLayoutPanel />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="number">
-            <Card className="border-gray-100">
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold">Number Input Field</h2>
-                  <p className="text-gray-500">Explore the different configurations available for number input fields</p>
-                  
-                  <Alert variant="info" className="bg-blue-50 border-blue-100">
-                    <Info className="h-5 w-5 text-blue-500" />
-                    <AlertDescription className="text-blue-700">
-                      These examples show all available number input features that can be used in your collections.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">1. Basic Number</h3>
-                        <NumberInputField 
-                          id="basic-number"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="Basic Number Input"
-                        />
-                      </div>
-                      
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">2. Localized Numbers</h3>
-                        <NumberInputField 
-                          id="us-number"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="US Format"
-                          locale="en-US"
-                        />
-                        <div className="mt-4">
-                          <NumberInputField 
-                            id="de-number"
-                            value={numberValue} 
-                            onChange={setNumberValue}
-                            label="German Format"
-                            locale="de-DE"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">3. Currency</h3>
-                        <NumberInputField 
-                          id="usd-currency"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="USD Currency"
-                          locale="en-US"
-                          currency="USD"
-                        />
-                        <div className="mt-4">
-                          <NumberInputField 
-                            id="eur-currency"
-                            value={numberValue} 
-                            onChange={setNumberValue}
-                            label="EUR Currency"
-                            locale="de-DE"
-                            currency="EUR"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">4. Prefix & Suffix</h3>
-                        <NumberInputField 
-                          id="prefix-number"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="With Prefix"
-                          prefix="$"
-                        />
-                        <div className="mt-4">
-                          <NumberInputField 
-                            id="suffix-number"
-                            value={numberValue} 
-                            onChange={setNumberValue}
-                            label="With Suffix"
-                            suffix=" units"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">5. Buttons (Horizontal)</h3>
-                        <NumberInputField 
-                          id="horizontal-buttons"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="Increment/Decrement"
-                          showButtons
-                          buttonLayout="horizontal"
-                        />
-                      </div>
-                      
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">6. Buttons (Vertical)</h3>
-                        <NumberInputField 
-                          id="vertical-buttons"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="Vertical Layout"
-                          showButtons
-                          buttonLayout="vertical"
-                        />
-                      </div>
-                      
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">7. Float Label & Filled Style</h3>
-                        <NumberInputField 
-                          id="float-label"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="Float Label"
-                          floatLabel
-                        />
-                        <div className="mt-4">
-                          <NumberInputField 
-                            id="filled-style"
-                            value={numberValue} 
-                            onChange={setNumberValue}
-                            label="Filled Style"
-                            filled
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">8. States</h3>
-                        <NumberInputField 
-                          id="invalid-state"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="Invalid State"
-                          invalid
-                        />
-                        <div className="mt-4">
-                          <NumberInputField 
-                            id="disabled-state"
-                            value={numberValue} 
-                            onChange={setNumberValue}
-                            label="Disabled State"
-                            disabled
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 border rounded-md">
-                        <h3 className="text-sm font-medium mb-3">9. Accessibility</h3>
-                        <NumberInputField 
-                          id="accessible-number"
-                          value={numberValue} 
-                          onChange={setNumberValue}
-                          label="With Accessibility Features"
-                          aria-label="Numeric value with accessibility support"
-                          placeholder="Enter a number with enhanced accessibility"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          </div>
+        ) : (
+          <ComponentsPanel 
+            collections={collections}
+            onCreateField={handleCreateField}
+            onUpdateField={handleUpdateField}
+            isUpdating={isUpdating}
+          />
+        )}
       </div>
     </MainLayout>
   );
-}
+};
+
+export default ComponentsPage;

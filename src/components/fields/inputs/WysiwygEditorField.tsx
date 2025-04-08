@@ -1,12 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { BlockEditorField } from './BlockEditorField';
-
-// This is essentially a wrapper around the BlockEditorField
-// In a real implementation, you might use a different rich text editor library
-// or add more specific functionality for a WYSIWYG editor
+import { validateUIVariant } from '@/utils/inputAdapters';
 
 interface WysiwygEditorFieldProps {
   id: string;
@@ -18,6 +15,11 @@ interface WysiwygEditorFieldProps {
   helpText?: string;
   className?: string;
   minHeight?: string;
+  // Add appearance props
+  uiVariant?: "standard" | "material" | "pill" | "borderless" | "underlined";
+  colors?: Record<string, string>;
+  errorMessage?: string;
+  invalid?: boolean;
 }
 
 export function WysiwygEditorField({
@@ -29,10 +31,35 @@ export function WysiwygEditorField({
   required = false,
   helpText,
   className,
-  minHeight = '200px'
+  minHeight = '200px',
+  uiVariant = 'standard',
+  colors,
+  errorMessage,
+  invalid
 }: WysiwygEditorFieldProps) {
+  // Validate UI variant
+  const validUIVariant = validateUIVariant(uiVariant);
+  console.log(`WYSIWYG Editor: Using UI variant ${validUIVariant} for field ${id}`);
+
+  // Add UI variant class
+  const fieldClassName = cn(
+    'space-y-2',
+    className,
+    `ui-variant-${validUIVariant}`,
+    invalid && 'has-error'
+  );
+
+  // Generate custom style based on colors if provided
+  const customStyle: React.CSSProperties = {};
+  if (colors) {
+    if (colors.border) customStyle.borderColor = colors.border;
+    if (colors.text) customStyle.color = colors.text;
+    if (colors.background) customStyle.backgroundColor = colors.background;
+    // Focus is handled via CSS classes, but we could add more styling here
+  }
+
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={fieldClassName} data-ui-variant={validUIVariant} style={customStyle}>
       <BlockEditorField
         id={id}
         label={label}
@@ -40,7 +67,7 @@ export function WysiwygEditorField({
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        helpText={helpText}
+        helpText={invalid && errorMessage ? errorMessage : helpText}
         minHeight={minHeight}
         className={className}
       />
